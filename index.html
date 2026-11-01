@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>整えサロン DM作成</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+<style>
+:root{--stone:#f4efe6;--stone2:#e9e1d2;--moss:#3d5a47;--moss-d:#2c4334;--brass:#b08d4f;--ink:#2b2a27;--mute:#6b665c;--line:#d8cfbd;--red:#b4452f;--ok:#3d7a52}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Zen Kaku Gothic New","Yu Gothic",Meiryo,sans-serif;color:var(--ink);background:var(--stone);font-size:15px;line-height:1.6}
+h1,h2,h3{font-family:"Zen Old Mincho","Yu Mincho",serif;margin:0}
+button{font:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+/* ===== アプリ枠 ===== */
+.app{min-height:100vh}
+.top{background:var(--moss-d);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.top h1{font-size:19px;letter-spacing:.08em}
+.top small{opacity:.7;display:block;font-size:11px;letter-spacing:.15em}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{background:transparent;border:0;color:#d5e0d8;padding:9px 16px;border-radius:999px;font-weight:500}
+.tab.on{background:#fff;color:var(--moss-d);font-weight:700}
+.page{display:none;padding:18px 20px 60px;max-width:1500px;margin:0 auto}
+.page.on{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.card h3{font-size:16px;margin-bottom:10px;color:var(--moss-d)}
+.card h3 small{font-family:"Zen Kaku Gothic New";font-size:11px;color:var(--brass);letter-spacing:.15em;margin-left:8px}
+label.f{display:block;font-size:12.5px;color:var(--mute);margin:10px 0 3px;font-weight:500}
+label.f:first-of-type{margin-top:0}
+.in,textarea.in,select.in{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fffdf9}
+textarea.in{resize:vertical;min-height:62px;line-height:1.6}
+.in:focus{outline:2px solid var(--brass);outline-offset:-1px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:120px}
+.btn{background:var(--moss);color:#fff;border:0;border-radius:999px;padding:9px 20px;font-weight:700}
+.btn:hover{background:var(--moss-d)}
+.btn.sub{background:#fff;color:var(--moss-d);border:1px solid var(--moss)}
+.btn.warn{background:#fff;color:var(--red);border:1px solid var(--red)}
+.btn.sm{padding:5px 12px;font-size:13px}
+.hint{font-size:12.5px;color:var(--mute)}
+.warnbox{background:#fdf2e3;border:1px solid var(--brass);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13.5px}
+.warnbox b{color:var(--red)}
+.badge{display:inline-block;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:700;color:#fff}
+.b-new{background:#4d86a8}.b-regular{background:var(--ok)}.b-dormant{background:var(--brass)}
+/* ===== 今月のDM ===== */
+.split{display:grid;grid-template-columns:430px 1fr;gap:18px;align-items:start}
+.editor{max-height:calc(100vh - 110px);overflow:auto;padding-right:6px}
+.preview-wrap{position:sticky;top:70px}
+.pv-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.pv-scroll{max-height:calc(100vh - 150px);overflow:auto;background:#cfc7b6;border-radius:10px;padding:14px}
+.pv-pages{display:flex;flex-direction:column;gap:14px;align-items:center}
+.pvpage{position:relative}
+.ovf{position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:12px;padding:3px 10px;border-radius:999px;z-index:3;font-weight:700}
+@media(max-width:1000px){.split{grid-template-columns:1fr}.editor{max-height:none}.preview-wrap{position:static}}
+/* ===== 顧客 ===== */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{background:var(--stone2);text-align:left;padding:7px 8px;white-space:nowrap;position:sticky;top:0}
+.tbl td{border-bottom:1px solid var(--line);padding:4px;vertical-align:middle}
+.tbl input[type=text],.tbl input[type=date],.tbl input[type=number]{width:100%;border:1px solid transparent;background:transparent;padding:5px 6px;border-radius:6px}
+.tbl input:hover{border-color:var(--line)}
+.tbl input:focus{outline:2px solid var(--brass);background:#fff}
+.scrollx{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;max-height:60vh}
+/* ===== 効果測定 ===== */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi small{color:var(--mute);font-size:12px;display:block}
+.kpi b{font-family:"Zen Old Mincho";font-size:26px;color:var(--moss-d)}
+.bar{height:14px;background:var(--stone2);border-radius:99px;overflow:hidden;margin:3px 0 8px}
+.bar>i{display:block;height:100%;background:var(--moss)}
+/* ===== A4 紙面（プレビュー・印刷 共通） ===== */
+.sheet{width:210mm;height:297mm;background:#fffdf8;color:#2b2a27;position:relative;overflow:hidden;font-family:"Zen Kaku Gothic New","Yu Gothic",Meiryo,sans-serif;font-size:calc(10pt*var(--k,1));line-height:1.75}
+.sheet{--mute:#4a463f;font-weight:500;line-height:1.8}
+.sheet .hid{display:none!important}
+.sheet .in{height:100%;padding:10.5mm 14mm 8.5mm;display:flex;flex-direction:column;gap:2.8mm;overflow:hidden}
+.sheet:before{content:"";position:absolute;inset:6mm;border:.3mm solid var(--brass);pointer-events:none;opacity:.55}
+.sheet h2{font-family:"Zen Old Mincho","Yu Mincho",serif}
+.s-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:.5mm solid var(--moss);padding-bottom:2.5mm}
+.s-brand{font-family:"Zen Old Mincho","Yu Mincho",serif;font-size:calc(19pt*var(--k,1));color:var(--moss-d);letter-spacing:.12em;line-height:1.1}
+.s-brand small{display:block;font-family:"Zen Kaku Gothic New";font-size:calc(7pt*var(--k,1));color:var(--brass);letter-spacing:.3em;margin-bottom:1mm}
+.s-vol{text-align:right;font-size:calc(9pt*var(--k,1));color:var(--mute);line-height:1.4}
+.s-vol b{font-family:"Zen Old Mincho","Yu Mincho",serif;font-size:calc(15pt*var(--k,1));color:var(--moss-d);display:block}
+.s-to{font-family:"Zen Old Mincho","Yu Mincho",serif;font-size:calc(13pt*var(--k,1));color:var(--moss-d)}
+.s-greet{font-size:calc(10pt*var(--k,1))}
+.s-col{background:var(--stone);border-left:1.2mm solid var(--moss);padding:2.6mm 4.5mm}
+.s-lab{font-size:calc(7pt*var(--k,1));letter-spacing:.3em;color:var(--brass);font-weight:700}
+.s-col h2{font-size:calc(17pt*var(--k,1));line-height:1.4;color:var(--moss-d);margin:1mm 0 1.5mm}
+.s-lead{font-size:calc(9.5pt*var(--k,1));color:var(--brass);font-weight:700;margin-bottom:2mm}
+.s-col p{margin:0 0 2mm;text-align:justify}
+.s-sec{font-family:"Zen Old Mincho","Yu Mincho",serif;font-size:calc(12.5pt*var(--k,1));color:var(--moss-d);border-bottom:.3mm solid var(--line);padding-bottom:1mm;margin-bottom:2mm}
+.s-steps{display:flex;flex-direction:column;gap:2.4mm}
+.s-step{display:flex;gap:3.5mm;align-items:flex-start}
+.s-no{flex:none;width:9mm;height:9mm;border-radius:50%;background:var(--moss);color:#fff;font-family:"Zen Old Mincho";font-size:calc(13pt*var(--k,1));display:flex;align-items:center;justify-content:center;margin-top:.5mm}
+.s-step b{display:block;font-size:calc(10.5pt*var(--k,1));color:var(--moss-d)}
+.s-step span{font-size:calc(9.5pt*var(--k,1))}
+.s-safe{font-size:calc(8pt*var(--k,1));color:var(--mute);margin-top:1mm}
+.s-checks{list-style:none;margin:0;padding:0}
+.s-checks li{display:flex;gap:2.5mm;align-items:center;padding:1mm 0}
+.s-checks li:before{content:"";flex:none;width:4mm;height:4mm;border:.4mm solid var(--moss);border-radius:1mm;background:#fff}
+.s-cknote{background:#fff;border:.3mm solid var(--line);padding:2mm 3mm;margin-top:1.5mm;font-size:calc(9.3pt*var(--k,1))}
+.s-tip{background:var(--stone);padding:2mm 4mm}
+.s-tip b{display:block;color:var(--moss-d);font-size:calc(10.5pt*var(--k,1));margin-bottom:.5mm}
+.s-coupon{border:.5mm dashed var(--brass);background:#fffaf0;padding:2.4mm 4.5mm;position:relative}
+.s-coupon:before{content:"✂";position:absolute;top:-3.4mm;left:6mm;background:#fffdf8;padding:0 1.5mm;color:var(--brass);font-size:calc(11pt*var(--k,1))}
+.s-coupon .cl{display:flex;justify-content:space-between;align-items:baseline}
+.s-coupon h2{font-size:calc(14.5pt*var(--k,1));color:var(--moss-d)}
+.s-coupon .code{font-size:calc(8.5pt*var(--k,1));color:var(--mute);letter-spacing:.1em}
+.s-coupon .cb{font-size:calc(10.5pt*var(--k,1));margin:1mm 0}
+.s-coupon .cc{font-size:calc(8.3pt*var(--k,1));color:var(--mute)}
+.s-coupon .ex{font-weight:700;color:var(--red);font-size:calc(9.5pt*var(--k,1))}
+.s-book{display:flex;gap:4.5mm;align-items:center;border:.3mm solid var(--line);padding:2mm 3.5mm;background:#fff}
+.s-qr{flex:none;width:24mm;height:24mm;border:.3mm solid var(--line);display:flex;align-items:center;justify-content:center;font-size:calc(7pt*var(--k,1));color:var(--mute);text-align:center;background:#fff}
+.s-qr img{width:100%;height:100%;object-fit:contain}
+.s-book b{font-family:"Zen Old Mincho","Yu Mincho",serif;font-size:calc(11.5pt*var(--k,1));color:var(--moss-d);display:block}
+.s-book div{font-size:calc(9pt*var(--k,1));line-height:1.55}
+.s-hand{border:.3mm solid var(--line);background:#fff;padding:2.2mm 4mm;flex:1;min-height:17mm;display:flex;flex-direction:column}
+.s-hand .hl{font-size:calc(7.5pt*var(--k,1));color:var(--brass);letter-spacing:.25em;font-weight:700}
+.s-hand .ht{font-family:"Zen Kurenaido","Yu Gothic",cursive;font-size:calc(12pt*var(--k,1));line-height:1.75;color:#2d3a60;flex:1;white-space:pre-wrap}
+.s-hand .hs{font-family:"Zen Kurenaido","Yu Gothic",cursive;text-align:right;font-size:calc(11pt*var(--k,1));color:#2d3a60}
+.s-hand.blank .ht{background:repeating-linear-gradient(transparent,transparent calc(1.8*12pt*var(--k,1) - .25mm),var(--line) calc(1.8*12pt*var(--k,1) - .25mm),var(--line) calc(1.8*12pt*var(--k,1)))}
+.s-next{font-size:calc(9pt*var(--k,1));color:var(--mute)}
+.s-mot{flex:0 1 auto;width:52mm;height:24mm;margin:-4.5mm 2mm -4mm}
+.s-mot svg{width:100%;height:100%;display:block}
+.sheet .in{position:relative;z-index:1}
+.s-mot2{position:absolute;top:5.5mm;right:11mm;width:34mm;height:16mm;z-index:0;pointer-events:none}
+.s-mot2 svg{width:100%;height:100%;display:block}
+.s-cal{margin-top:2mm}
+.s-cal .cl{font-size:calc(9.5pt*var(--k,1));color:var(--mute);margin-bottom:1mm}
+.s-cal .cg{display:grid;grid-template-columns:repeat(11,1fr);gap:1.4mm 0}
+.s-cal.cal-s .cg{grid-template-columns:repeat(16,1fr);gap:1mm 0}
+.s-cal.cal-s i{width:10mm;height:10mm;font-size:calc(8.5pt*var(--k,1))}
+.s-cal i{font-style:normal;font-size:calc(9.5pt*var(--k,1));text-align:center;border:.35mm solid var(--moss);border-radius:50%;width:11.5mm;height:11.5mm;justify-self:center;display:flex;align-items:center;justify-content:center;color:var(--mute);background:#fff;line-height:1}
+.s-two{display:flex;gap:3.5mm}
+.s-nv,.s-ref{flex:1;border:.3mm solid var(--line);background:#fff;padding:2.5mm 3.5mm;font-size:calc(9pt*var(--k,1));line-height:1.6}
+.s-nv .nvt{font-size:calc(9.5pt*var(--k,1));margin-top:.5mm}.s-nv .nvt b{color:var(--moss-d);font-size:calc(11pt*var(--k,1))}.s-nv .nvm{color:var(--mute);font-size:calc(8.5pt*var(--k,1))}
+.s-nv .nvw{margin-top:2mm;border-bottom:.3mm solid var(--moss);font-size:calc(9.5pt*var(--k,1));letter-spacing:.05em;padding-bottom:.5mm}
+.s-ref b{display:block;color:var(--moss-d);font-size:calc(10.5pt*var(--k,1))}
+.s-foot{margin-top:auto;border-top:.3mm solid var(--line);padding-top:2mm;font-size:calc(8pt*var(--k,1));color:var(--mute);display:flex;justify-content:space-between;gap:4mm}
+.sp{flex:1;min-height:0}
+/* ===== AIモーダル ===== */
+.modal{position:fixed;inset:0;background:#0007;z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:30px 14px;overflow:auto}
+.modal-in{background:#fff;border-radius:14px;max-width:760px;width:100%;padding:18px 22px 24px}
+.modal .opt{display:flex;gap:10px;margin:12px 0}
+.modal .opt label{flex:1;border:2px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:700;color:var(--moss-d)}
+.modal .opt label.on{border-color:var(--moss);background:#eef3ee}
+.modal .opt small{display:block;font-weight:400;color:var(--mute);font-size:12.5px}
+.aires{background:var(--stone);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:13.5px}
+.aires dt{font-size:11.5px;color:var(--brass);font-weight:700;margin-top:8px}
+.aires dd{margin:0}
+/* ===== 封筒（長形3号 120×235mm 縦書き） ===== */
+.env{width:120mm;height:235mm;background:#fff;color:#000;position:relative;overflow:hidden;font-family:"Yu Mincho","Zen Old Mincho",serif}
+.env .zip{position:absolute;top:13mm;right:14mm;display:flex;gap:1.2mm}
+.env .zip i{width:6mm;height:8mm;border:.3mm solid #c0392b;font-style:normal;font-size:12pt;text-align:center;line-height:8mm;color:#000}
+.env .zip i.g{margin-left:2.4mm}
+.env .adr{position:absolute;right:20mm;top:38mm;height:150mm;writing-mode:vertical-rl;font-size:13pt;line-height:1.9;letter-spacing:.08em}
+.env .adr.l2{right:30mm}
+.env .nm{position:absolute;left:50mm;top:62mm;height:140mm;writing-mode:vertical-rl;font-size:23pt;letter-spacing:.2em;line-height:1.4}
+.env .nm small{font-size:17pt;margin-top:4mm}
+.env .snd{position:absolute;left:12mm;bottom:12mm;height:70mm;writing-mode:vertical-rl;font-size:8.5pt;line-height:1.6}
+.env .snd b{font-size:10.5pt}
+.env .szip{position:absolute;left:12mm;bottom:86mm;font-size:8pt;letter-spacing:.1em;writing-mode:vertical-rl}
+.envbox{border:1px solid var(--line);display:inline-block;box-shadow:0 1px 6px #0002}
+/* ===== 印刷 ===== */
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  html,body{background:#fff}
+  .app{display:none!important}
+  #printArea{display:block}
+  #printArea .sheet{break-after:page;page-break-after:always;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #printArea .sheet:last-child{break-after:auto;page-break-after:auto}
+  #printArea .env{break-after:page;page-break-after:always;margin:0}
+  #printArea .env:last-child{break-after:auto;page-break-after:auto}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <h1><small>TOTONOE SALON</small>整えサロン DM作成</h1>
+    <div class="tabs" id="tabs"></div>
+  </div>
+
+  <!-- ① 今月のDM -->
+  <section class="page on" id="p-issue">
+    <div id="missing"></div>
+    <div class="split">
+      <div class="editor" id="editor"></div>
+      <div class="preview-wrap">
+        <div class="pv-bar">
+          <label class="hint" style="margin:0">発行月</label>
+          <input type="month" class="in" id="ymSel" style="width:auto">
+          <label class="hint" style="margin:0">プレビュー宛先</label>
+          <select class="in" id="pvCust" style="width:auto;max-width:230px"></select>
+          <button class="btn sub sm" onclick="go('print')">印刷へ →</button>
+        </div>
+        <div id="fitMsg" class="hint" style="margin-bottom:6px;color:var(--brass);font-weight:700"></div>
+        <div class="pv-scroll" id="pvScroll"><div class="pv-pages" id="pvPages"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 顧客 -->
+  <section class="page" id="p-cust">
+    <div class="card">
+      <h3>お客様リスト<small>CUSTOMERS</small></h3>
+      <p class="hint">「最終来店日」と「来店回数」から、<span class="badge b-new">新規</span> <span class="badge b-regular">通い</span> <span class="badge b-dormant">休眠(90日〜)</span> を自動判定し、手書きひとこと・特典を出し分けます。データはこのPCのブラウザ内にのみ保存されます（外部送信なし）。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+        <button class="btn" onclick="addCust()">＋ お客様を追加</button>
+        <button class="btn sub" onclick="autoLineAll()">ひとことを自動作成（空欄のみ）</button>
+        <button class="btn sub" onclick="toggleImport()">CSV/表から一括取り込み</button>
+        <button class="btn sub" onclick="exportCsv()">宛名CSVを書き出し</button>
+        <button class="btn sub" onclick="sampleCust()">サンプル3名を入れる</button>
+      </div>
+      <div id="importBox" style="display:none;margin-bottom:10px">
+        <p class="hint">Excelからコピー（タブ区切り）またはCSVを貼り付け。列順：<b>氏名, 郵便番号, 住所, 最終来店日(例 2026-09-15), 来店回数, 気になる部位, 前回メニュー, 話題メモ, 誕生月</b>（後ろの列は省略可。1行目が見出しなら自動で除外）</p>
+        <textarea class="in" id="importTxt" rows="5"></textarea>
+        <button class="btn sm" style="margin-top:6px" onclick="doImport()">取り込む</button>
+      </div>
+      <div class="scrollx"><table class="tbl" id="custTbl"></table></div>
+    </div>
+  </section>
+
+  <!-- ③ 印刷 -->
+  <section class="page" id="p-print">
+    <div class="card">
+      <h3>印刷する<small>PRINT</small></h3>
+      <p class="hint">発行月：<b id="prMonth"></b>　／　各お客様 A4×2枚（片面2ページ）。両面印刷にすると封筒に入れる枚数が1枚に収まり、<b>110円（定形25g以内）</b>で送れる場合が多いです。印刷ダイアログで「用紙：A4」「余白：なし」「背景のグラフィック：オン」にしてください。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center">
+        <button class="btn" onclick="printSel()">選んだお客様分を印刷</button>
+        <button class="btn sub" onclick="printBlank()">宛名なし版を印刷</button>
+        <input type="number" class="in" id="blankN" value="1" min="1" max="200" style="width:80px"><span class="hint">部</span>
+        <button class="btn sub" onclick="recordLog()">この月の送付先として記録</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center;padding:10px 12px;background:var(--stone);border-radius:10px">
+        <b style="color:var(--moss-d)">封筒の宛名</b>
+        <button class="btn" onclick="printEnv()">宛名を印刷（長形3号・縦書き）</button>
+        <span class="hint">印刷ダイアログで用紙サイズを「長形3号（120×235mm）」、余白「なし」にし、封筒を給紙トレイにセットしてください。事前に普通紙へ試し刷りして、位置を確認すると安心です。差出人は⑤サロン情報の内容です。</span>
+      </div>
+      <div id="envPv" style="margin-bottom:12px"></div>
+      <div style="margin:8px 0"><button class="btn sub sm" onclick="selRec()">★おすすめの方だけ選択</button> <span class="hint">来店周期が近い・初回後フォロー・休眠・誕生月の方を自動で選びます。毎月全員に送るより、タイミングの合う方に送る方が反応が上がります。</span></div>
+      <div style="margin:8px 0"><label><input type="checkbox" id="chkAll" onchange="selAll(this.checked)" checked> 全員選択</label>
+        <span class="hint">（「DM不要」にしたお客様は自動で除外されます）</span></div>
+      <div class="scrollx"><table class="tbl" id="prTbl"></table></div>
+    </div>
+  </section>
+
+  <!-- ④ 効果測定 -->
+  <section class="page" id="p-eff">
+    <div class="card">
+      <h3>効果測定<small>RESULTS</small></h3>
+      <p class="hint">クーポンの「No.」を予約時に確認し、反応のあったお客様にチェックを入れます。月ごとの反応率と費用対効果が見えます。</p>
+      <div class="row" style="margin:10px 0"><div><label class="f">対象の発行月</label><input type="month" class="in" id="effYm"></div><div></div></div>
+      <div id="effBody"></div>
+    </div>
+  </section>
+
+  <!-- ⑤ サロン情報 -->
+  <section class="page" id="p-set">
+    <div class="split" style="grid-template-columns:1fr 1fr">
+      <div>
+        <div class="card"><h3>サロン情報<small>SALON</small></h3><div id="setForm"></div></div>
+        <div class="card"><h3>予約QRコード<small>QR</small></h3>
+          <p class="hint">予約アプリのQR画像を登録すると、DMの2枚目に印字されます。<br>作り方：Chromeで予約アプリを開き、アドレスバー右の共有アイコン →「QRコードを作成」→ダウンロード。</p>
+          <input type="file" accept="image/*" id="qrFile" onchange="upQr(this)">
+          <div style="margin-top:8px"><img id="qrImg" style="max-width:140px;display:none;border:1px solid var(--line)"><br><button class="btn warn sm" id="qrDel" style="display:none;margin-top:6px" onclick="delQr()">QRを削除</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="card"><h3>費用・売上の目安<small>COST</small></h3><div id="costForm"></div></div>
+        <div class="card"><h3>AI設定<small>AI</small></h3>
+          <p class="hint">AIでの下書き作成に使います。<b>未設定でも</b>「プロンプトをコピー」方式で使えます。</p>
+          <label class="f">Claude APIキー（任意）</label><input class="in" type="password" id="aiKey" autocomplete="off" placeholder="sk-ant-...">
+          <label class="f">モデル</label><input class="in" id="aiModel">
+          <p class="hint" style="margin-top:8px;line-height:1.7">・キーはこのPCのブラウザ内にだけ保存し、バックアップファイルには含めません。他人とPCを共有する場合は設定しないでください。<br>・API利用料は別途かかります（1回の下書きで数円〜十数円程度の目安）。</p>
+          <button class="btn sub sm" onclick="saveAiSet()">AI設定を保存</button> <button class="btn warn sm" onclick="clearAiKey()">キーを消去</button>
+        </div>
+        <div class="card"><h3>バックアップ<small>BACKUP</small></h3>
+          <p class="hint">全データ（文面・お客様・記録）をファイルに保存／復元できます。月1回、OneDrive内に保存しておくと安心です。</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sub" onclick="backup()">バックアップを保存</button>
+          <button class="btn sub" onclick="$('#restoreFile').click()">復元する</button><input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restore(this)"></div>
+        </div>
+        <div class="card"><h3>文面を作るときの注意<small>NOTE</small></h3>
+          <p class="hint" style="line-height:1.8">・「治る」「必ず改善」など効果を断定する表現は避け、「〜しやすくなります」「〜の目安です」を使いましょう（医療広告ガイドライン配慮）。<br>・特典は値引きより<b>付加価値（ケア追加・無料評価）</b>にすると、単価を下げずに来店理由をつくれます。<br>・個人情報を含むため、印刷物・CSVの保管にご注意ください。</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="aiModal" class="modal" style="display:none"><div class="modal-in">
+  <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="font-size:19px;color:var(--moss-d)">✨ AIで文面を下書き<small style="font-size:12px;color:var(--brass);margin-left:8px" id="aiYm"></small></h3><button class="btn sub sm" onclick="closeAi()">閉じる</button></div>
+  <div id="aiBody"></div>
+</div></div>
+<div id="printArea"></div>
+
+<script>
+/* =========================================================
+   月別の初期文面（健康コラム／セルフケア／特典）
+   ========================================================= */
+const M={
+1:{title:'寒さで固まる体を、ゆるめる習慣を',lead:'冬の肩こり・腰痛は「縮こまり」が一因かもしれません',
+ c1:'寒い日は無意識に肩をすくめ、背中を丸め、体を小さくして過ごしがちです。この姿勢が続くと、首や肩、腰まわりの筋肉がこわばり、血の巡りも滞りやすくなります。',
+ c2:'作業療法士の視点では、痛む場所だけでなく「一日の姿勢や動き方」を見直すことが大切です。1日数回、縮こまった体を伸ばす時間をつくってみましょう。',
+ steps:[['肩をストンと落とす','肩を耳に近づけて5秒ぐっと力を入れ、息を吐きながら一気に脱力。3回くり返します。'],['胸を開いて深呼吸','両手を後ろで組み、軽く胸を張って4秒吸い、6秒かけて吐きます。3回。'],['足首をぐるぐる','座ったまま足首を左右5回ずつ回します。冷えやすい足先の巡りを促します。']],
+ checks:['朝、起きた時に体がこわばっている','寒いと無意識に肩に力が入る','最近、歩く量が減った','夜、足先が冷えて寝つきにくい'],
+ tipT:'お風呂は「ぬるめ＋10分」が目安',tipB:'38〜40℃のお湯に10分ほど浸かると、体の深部までゆっくり温まりやすく、寝る準備にも役立ちます。熱すぎるお湯はかえって眠りにくくなることも。',
+ greet:'新しい年が始まりました。本年も、皆さまの「動ける体」「眠れる体」づくりをお手伝いさせてください。',
+ offerT:'新年ごあいさつ特典',offerB:'ご来店時、通常メニューに5分間の「肩甲骨まわりケア」を追加いたします。',next:'次号は「冬の腰痛予防」をお届けします。'},
+2:{title:'腰を守る鍵は「股関節」と「動き出し」',lead:'寒さが厳しい今、腰を痛めやすい季節です',
+ c1:'寒さで筋肉が硬くなっているところに、朝の起き上がりや重い物を持ち上げる動作が加わると、腰に大きな負担がかかります。',
+ c2:'腰そのものより、股関節と太もも裏の柔らかさが腰を守ってくれます。「動き出す前のひと準備」を習慣にしてみましょう。',
+ steps:[['寝たまま膝かかえ','仰向けで片膝ずつ胸へ引き寄せ、ゆっくり5呼吸。左右2回ずつ。'],['起き上がりは横向きから','いきなり腹筋で起きず、横向きになって腕で体を押し上げて起きます。'],['太もも裏のばし','椅子に浅く座り片脚を前へ出し、背すじを伸ばしたまま軽く前傾。20秒×左右。']],
+ checks:['朝、腰がこわばって動き出しにくい','前かがみで顔を洗うと腰がつらい','長く座ると腰が重くなる','ももの裏が硬いと感じる'],
+ tipT:'カイロを貼るなら「お尻の少し上」',tipB:'腰骨の中央より少し下（仙骨のあたり）を温めると効率的です。低温やけど防止のため、衣類の上から貼り、就寝時は外しましょう。',
+ greet:'寒さの底ともいえる時期です。お変わりなくお過ごしでしょうか。',
+ offerT:'冬の「腰ケア」特典',offerB:'腰痛・腰の張り軽減コースのご予約で、股関節セルフケアのワンポイントレッスンをプレゼントします。',next:'次号は「春の寒暖差と自律神経」です。'},
+3:{title:'寒暖差に負けない、呼吸と首のゆるめ方',lead:'春先の「なんとなく不調」は自律神経の疲れかも',
+ c1:'3月は一日の気温差が大きく、年度末の忙しさも重なって、体は知らず知らず緊張しています。緊張が続くと呼吸が浅くなり、首や肩のこりにつながりやすくなります。',
+ c2:'呼吸を深くすると、体はリラックスモードに切り替わりやすくなります。難しいことは不要。1日3回、数十秒の深呼吸から始めましょう。',
+ steps:[['4秒吸って6秒吐く','鼻から4秒吸い、口からゆっくり6秒。吐く息を長くするのがコツ。5回。'],['首の後ろをゆるめる','あごを軽く引き、頭の重みで首の後ろをのばす。15秒。無理に押さないで。'],['朝の光を浴びる','起きたらカーテンを開け、1分ほど光を浴びて体内時計を整えます。']],
+ checks:['寝ても疲れが取れない','肩や首が常に重い','天気や気温で調子が変わる','息が浅いと感じる'],
+ tipT:'ため息は「吐く練習」',tipB:'ため息は、浅くなった呼吸を整えようとする体の自然な反応です。我慢せず、ゆっくり長く吐いてみましょう。',
+ greet:'春の気配が近づき、あたたかい日が増えてきました。年度末でお忙しい方も多いかと思います。',
+ offerT:'春のリセット特典',offerB:'ご来店の方に、首・肩のこわばりチェック（姿勢評価）をプラスし、結果をお渡しします。',next:'次号は「新生活の姿勢づくり」です。'},
+4:{title:'新生活の疲れは「座り姿勢」から整える',lead:'デスクワーク・慣れない環境での肩こりに',
+ c1:'新しい環境では緊張から肩に力が入り、集中するほど頭が前に出て、背中が丸まります。この姿勢が続くと首肩の負担が増えます。',
+ c2:'完璧な姿勢を保つ必要はありません。「30〜60分に一度、姿勢を変える」だけでも体への負担は変わります。',
+ steps:[['お尻を深く座り直す','椅子に深く座り、骨盤を立てて背もたれに軽くもたれます。足裏は床に。'],['肩甲骨を寄せて10秒','胸を軽く開き、肩甲骨を寄せて10秒キープ。ゆるめて3回。'],['1時間に1回立つ','立ち上がって伸びをするだけでOK。トイレや給水のついでに。']],
+ checks:['パソコンやスマホで頭が前に出る','夕方になると首肩が重い','足を組むクセがある','座りっぱなしで1時間以上動かない'],
+ tipT:'モニターは「目線よりやや下」へ',tipB:'画面の上端が目の高さ、またはやや下になる配置が目安です。ノートPCは台に載せ、外付けキーボードを使うと首の負担が軽くなります。',
+ greet:'桜の季節も過ぎ、新しい環境に慣れてきた頃でしょうか。お疲れが出やすい時期です。',
+ offerT:'新生活応援特典',offerB:'ご家族・ご友人をご紹介いただくと、お二人ともにケアを5分追加いたします。',next:'次号は「五月病と睡眠」です。'},
+5:{title:'だるい連休明けは「朝の整え」から',lead:'5月の疲れ・眠りの浅さに、体からアプローチ',
+ c1:'連休で生活リズムが乱れると、体内時計がずれて「だるい・眠い・やる気が出ない」状態になりやすくなります。',
+ c2:'体のこわばりを軽くすると寝つきも変わりやすく、睡眠の質にもつながります。まずは「朝の光」と「軽い体操」から。',
+ steps:[['起きたら光を浴びる','起床後30分以内に、窓際で1〜2分。体内時計のリセットに役立ちます。'],['背伸び＋体側のばし','両手を組んで上へのび、左右にゆっくり倒して各10秒。'],['寝る前の足首まわし','布団の中で足首を回し、ふくらはぎをさする。足先がゆるむと眠りやすくなります。']],
+ checks:['朝、なかなか起きられない','寝つきが悪い・夜中に目が覚める','日中ぼんやりする','体を動かすのが億劫'],
+ tipT:'寝る1時間前は「画面オフ」',tipB:'スマホの光は脳を覚醒させやすいといわれます。寝る前は照明を少し落とし、ゆったりした呼吸で体を休ませましょう。',
+ greet:'新緑のまぶしい季節になりました。連休の疲れが残っていらっしゃいませんか。',
+ offerT:'初夏のリフレッシュ特典',offerB:'ご来店の方に、睡眠・疲れの聞き取りと、おうちでできる体操のオーダーメイド提案をいたします。',next:'次号は「梅雨のむくみ・気圧不調」です。'},
+6:{title:'梅雨の重だるさ、足から軽く',lead:'むくみ・気圧による不調が気になる方へ',
+ c1:'雨の日は活動量が減り、足の血液やリンパが滞って「むくみ」や「だるさ」が出やすくなります。気圧の変化で首肩の重さを感じる方も多い時期です。',
+ c2:'ふくらはぎは「第二の心臓」。足首とふくらはぎをよく動かすだけでも、巡りをサポートできます。',
+ steps:[['かかと上げ下げ','壁や椅子に手を添え、かかとをゆっくり上げ下げ。20回。'],['ふくらはぎさすり','足首からひざ裏へ向かって、手のひらでやさしく下から上へ。左右1分。'],['耳まわしで気圧対策','耳を軽くつまんで、後ろへゆっくり5回。気持ちよい強さで。']],
+ checks:['夕方になると靴がきつい','足がだるい・つりやすい','雨の日に頭や首が重い','最近あまり歩いていない'],
+ tipT:'むくみ対策は「水分を控えない」',tipB:'むくむからと水分を控えすぎるのは逆効果になることも。こまめに少しずつ飲み、塩分のとりすぎに気をつけましょう。',
+ greet:'雨の季節に入りました。じめじめと体も重くなりやすい頃、いかがお過ごしでしょうか。',
+ offerT:'雨の日の足ケア特典',offerB:'「足の痛み・張り軽減コース」のご予約で、足裏〜ふくらはぎのセルフケア指導を追加します。',next:'次号は「冷房冷えと夏バテ」です。'},
+7:{title:'冷房で冷える体、夏バテにご注意を',lead:'暑いのに肩や腰がつらい、はそのサインかも',
+ c1:'外は暑く室内は冷房という環境で、体は温度差に疲れやすくなります。冷えで筋肉がこわばり、肩こりや腰痛、だるさにつながることもあります。',
+ c2:'シャワーだけで済ませず、ぬるめの湯船や、首・お腹・足首を冷やさない工夫がおすすめです。',
+ steps:[['3つの首を温める','首・手首・足首は、冷えを感じやすい場所。羽織りやソックスで保護します。'],['お腹をあたためる','腹巻きや薄手のカイロで、お腹まわりを冷やしすぎないように。'],['ぬるめ湯船で10分','38〜40℃で10分。汗をかいたら水分・塩分もしっかり補給。']],
+ checks:['冷房の効いた室内にいる時間が長い','食欲がなく、だるい','夏なのに足先が冷たい','寝苦しく、眠りが浅い'],
+ tipT:'冷たい飲み物ばかりは要注意',tipB:'冷たい飲み物をとり続けると内臓が冷えて疲れやすくなる場合があります。常温や温かい飲み物も取り入れましょう。',
+ greet:'暑さ厳しい日が続きますが、お変わりなくお過ごしでしょうか。',
+ offerT:'夏の「温め」特典',offerB:'ご来店の方に、肩〜背中のあたため＆ほぐしを5分追加いたします。',next:'次号は「猛暑と睡眠」です。'},
+8:{title:'猛暑を乗り切る、眠りと水分の整え方',lead:'寝苦しい夜・朝のだるさが続く方へ',
+ c1:'熱帯夜が続くと睡眠が浅くなり、疲れが抜けにくくなります。睡眠不足は肩こりや腰痛を強く感じさせる一因ともいわれます。',
+ c2:'寝室の温度・湿度、寝る前の過ごし方を少し変えるだけでも、眠りやすさは変わります。',
+ steps:[['寝室は「26〜28℃」目安','エアコンのタイマーより、一晩つけておく方が眠りが安定する場合もあります。'],['寝る前の首元クールダウン','冷たいタオルで首の後ろを2〜3分冷やすと、寝つきをサポートします。'],['朝イチで水を一杯','起床後にコップ1杯の水を。寝ている間に失われた水分を補給します。']],
+ checks:['寝苦しくて夜中に目が覚める','朝からだるい','水分をあまりとっていない','食事が簡単になりがち'],
+ tipT:'水分は「のどが渇く前」に',tipB:'のどの渇きを感じた時点で、すでに水分が不足しています。1回に飲む量は少なくてよいので、こまめに補給しましょう。',
+ greet:'暑中お見舞い申し上げます。厳しい暑さの中、いかがお過ごしでしょうか。',
+ offerT:'夏の疲れリセット特典',offerB:'ご来店の方に、おうちでできる「眠りの体操」をお渡しします。',next:'次号は「秋の体づくり」です。'},
+9:{title:'夏の疲れを持ち越さない、秋の立て直し',lead:'涼しくなる今こそ、体を整えるチャンス',
+ c1:'夏の間にたまった疲れは、涼しくなってから表に出ることがあります。肩こり・腰痛・だるさが出やすい時期です。',
+ c2:'気温が下がるこの時期に、軽い運動と睡眠を整えておくと、冬に向けた体づくりに役立ちます。',
+ steps:[['10分のウォーキング','歩幅を少し広げ、かかとから着地。背すじを伸ばして気持ちよく。'],['もも上げ体操','椅子に座ったまま、左右交互に太ももを上げ下げ。各10回。'],['湯船で温まる','シャワーから、湯船に戻す季節です。ぬるめで10分を目安に。']],
+ checks:['夏の疲れが残っている','運動不足を感じる','朝晩の気温差で体調が変わる','食欲にムラがある'],
+ tipT:'歩くなら「朝か夕方」',tipB:'涼しい時間帯の散歩は体への負担も少なく続けやすい方法です。無理のない距離から始めましょう。',
+ greet:'朝晩に涼しい風を感じる季節になりました。夏の疲れは出ていませんか。',
+ offerT:'秋の体づくり特典',offerB:'「体の不調しっかり改善コース」のご予約で、姿勢・動きの再評価（約10分）をプラスします。',next:'次号は「運動の秋と足のケア」です。'},
+10:{title:'歩く力は、足と股関節から',lead:'運動の秋。体を動かす前の準備が大切です',
+ c1:'運動を始める季節ですが、準備なしに動くと膝や腰を痛めることも。足裏や股関節の柔らかさが、歩きやすさを左右します。',
+ c2:'作業療法士としてお伝えしたいのは、「いつまでも自分で動ける体」のための習慣です。今日から少しずつ始めましょう。',
+ steps:[['足指グーパー','座って足指を大きく開いて閉じる。足裏の感覚を呼び覚まします。10回。'],['股関節まわし','立って片脚を持ち上げ、ひざで大きな円を描く。左右5回ずつ。'],['片脚立ち10秒','机に手を添え、片脚で10秒。バランスを保つ筋肉を使います。']],
+ checks:['歩くと足やひざが痛む','つまずきやすくなった','片脚で靴下をはくとふらつく','運動を始めたいが不安'],
+ tipT:'靴は「夕方」に選ぶ',tipB:'足は夕方に少しむくみます。夕方に試し履きすると、きつすぎる靴を避けやすくなります。',
+ greet:'過ごしやすい季節になりました。体を動かすのにも気持ちのよい頃ですね。',
+ offerT:'足元ケア特典',offerB:'ご来店の方に、足の状態チェック（足裏・アーチ・歩き方）をプラスします。',next:'次号は「冬支度の体づくり」です。'},
+11:{title:'冬支度は、冷えを溜めない習慣から',lead:'朝晩の冷え込みで、肩・腰が固まる前に',
+ c1:'気温が下がり始めると、体は熱を逃がさないよう緊張し、肩や腰に力が入りやすくなります。冷えてからではなく、冷える前の対策が肝心です。',
+ c2:'首・お腹・足首を冷やさない、そして軽く動いて血行を保つ。この2つが冬の体づくりの基本です。',
+ steps:[['肩まわし','肩に手を置き、ひじで大きな円を描く。前後5回ずつ。'],['お腹・腰を温める','腹巻きやカイロで、おへそ〜腰まわりを冷やしすぎないように。'],['朝のコップ白湯','起きたら白湯を1杯。体の内側から温まりやすくなります。']],
+ checks:['朝晩の冷え込みがこたえる','肩や腰が固まってきた','手足が冷たい','動くのが億劫になってきた'],
+ tipT:'カイロは「肩甲骨の間」も',tipB:'肩甲骨の間を温めると、肩こりの緩和を感じやすい方もいます。低温やけどに注意し、衣類の上から使いましょう。',
+ greet:'朝晩の冷え込みが深まってきました。お風邪など召されていませんか。',
+ offerT:'冬支度の温めケア特典',offerB:'ご来店の方に、肩〜背中の温めケアを5分追加いたします。',next:'次号は「一年の疲れと大掃除の腰痛」です。'},
+12:{title:'一年の疲れをリセットして、新年へ',lead:'大掃除・年末の忙しさで腰を痛めないために',
+ c1:'年末は大掃除や買い物、帰省の移動などで、普段しない動きが増えます。「中腰」「重い荷物」は腰への負担が大きい動作です。',
+ c2:'今年一年がんばった体をいたわる気持ちで、年末年始はぜひ無理のない過ごし方を。来年も元気に動ける体づくりを応援します。',
+ steps:[['しゃがんで持ち上げる','荷物は腰を曲げず、ひざを曲げて体に近づけてから持ち上げます。'],['掃除は「30分ごと」休憩','同じ姿勢を続けず、30分ごとに立って背伸びをします。'],['年末の体チェック','今年の肩こり・腰痛の傾向をふり返り、来年に向けて整える点を考えましょう。']],
+ checks:['大掃除の予定がある','重い荷物を持つ・移動が多い','年末に疲れを感じている','来年は体を整えたい'],
+ tipT:'年末年始のお休みに「ととのえ時間」を',tipB:'休暇中も、起床・就寝の時間を大きくずらさないことが、体のリズムを保つコツです。',
+ greet:'今年も残りわずかとなりました。一年間、本当にありがとうございました。',
+ offerT:'年末ごあいさつ特典',offerB:'年内のご来店の方に、感謝を込めて「年越しセルフケア表」をプレゼントします。',next:'来年も、毎月お届けします。どうぞよろしくお願いいたします。'}
+};
+/* パターンB：毎年同じ内容にならないよう、別テーマを用意（年ごとに A/B を自動で交互） */
+const M2={
+1:{title:'寝起きの体を、布団の中で目覚めさせる',lead:'朝のこわばりは、動き出す前の“ひと手間”で変わります',
+ c1:'眠っている間、体はほとんど動かず、朝は筋肉も関節も硬くなっています。その状態でいきなり動くと、腰や首に負担がかかりやすくなります。',
+ c2:'布団の中で手足をゆっくり動かすだけでも、体は目覚めやすくなります。起き上がる前の1分を、体への“おはよう”の時間にしてみましょう。',
+ steps:[['手足をグーパー','仰向けで手足の指を握って開く。10回ずつ。血の巡りを促します。'],['膝を左右にゆらゆら','仰向けで両膝を立て、ゆっくり左右へ倒します。腰まわりがゆるみます。'],['ゆっくり起き上がる','横向きになり、腕で支えながら起きます。急に立たず、一息おきましょう。']],
+ checks:['朝、体が重く動き出しにくい','起き上がる時に腰が気になる','朝、手足がこわばっている','寝起きに首が痛むことがある'],
+ tipT:'まくらは「首のカーブ」を支える高さに',tipB:'仰向けで首のカーブが自然に保たれる高さが目安です。高すぎると首に負担がかかり、低すぎると頭に血が上りやすい場合があります。',
+ greet:'新しい年を迎え、慌ただしさも落ち着いた頃かと思います。お変わりなくお過ごしでしょうか。',
+ offerT:'朝の体づくり特典',offerB:'ご来店の方に、布団の中でできる「朝の1分体操」シートをお渡しします。',next:'次号は「呼吸と肩こり」です。'},
+2:{title:'肩こりの陰に“浅い呼吸”が隠れているかも',lead:'息の通り道を整えると、肩の力みも抜けやすくなります',
+ c1:'呼吸の時は、肋骨や背中も動いています。猫背や緊張で胸まわりが固まると、息が浅くなり、首や肩が呼吸を助けようとして力みやすくなります。',
+ c2:'胸まわりをゆるめて深く息を入れる練習は、肩こりの見直しにも役立ちます。まずはゆっくり息を吐くことから始めてみましょう。',
+ steps:[['肋骨のわきを広げる','両手を脇腹に当て、息を吸いながら手を押し返すように広げます。5回。'],['タオルを丸めて背中に','丸めたバスタオルを背中の下に入れて仰向けに。胸が開く感覚を1分味わいます。'],['吐く息を長く','鼻から3秒吸い、口から6秒吐く。力を抜きながら5回。']],
+ checks:['息を深く吸いにくい','肩に力が入りやすい','猫背だと言われる','ため息が多い'],
+ tipT:'「胸を張る」より「背すじをのばす」',tipB:'胸を無理に張ると腰が反り、かえって疲れます。頭のてっぺんを天井へ引き上げるイメージで、楽に背すじをのばしましょう。',
+ greet:'寒さの中にも、少しずつ春の気配を感じる頃になりました。いかがお過ごしでしょうか。',
+ offerT:'呼吸としなやかさ特典',offerB:'ご来店の方に、胸まわり・肩甲骨の動きチェックをプラスし、結果をお伝えします。',next:'次号は「足元から整える春の靴選び」です。'},
+3:{title:'足裏から姿勢を整える、春の靴選び',lead:'新年度の前に、靴と足を見直しませんか',
+ c1:'靴が合っていないと、足の指が使いにくくなり、ひざや腰、さらには肩まわりまで、姿勢のくずれが広がることがあります。',
+ c2:'新しい靴を選ぶ時は、デザインだけでなく「かかとが安定するか」「足指が動かせるか」を確かめましょう。長く歩く方ほど大切です。',
+ steps:[['足指でタオルをたぐる','床のタオルを足指でつかんで引き寄せます。左右10回。'],['かかとを合わせて結ぶ','靴を履いたら、かかとを床で合わせてからひもを結び直します。毎回の習慣に。'],['土踏まずをころころ','ゴルフボールなどを足裏で転がします。痛みのない強さで1分。']],
+ checks:['靴の外側ばかりすり減る','夕方に足がだるい','足の指が使いにくい','靴を選ぶ時に迷う'],
+ tipT:'靴は「両足を履いて、夕方に」試す',tipB:'左右の足の大きさは少し違うことがあります。大きい方に合わせ、むくみやすい夕方に試すと安心です。',
+ greet:'暖かい日が増え、春の訪れを感じる季節になりました。新しい季節の準備はいかがですか。',
+ offerT:'足元チェック特典',offerB:'ご来店の方に、足裏・アーチ・立ち姿勢のチェックをプラスします。',next:'次号は「スマホ首のリセット」です。'},
+4:{title:'スマホ首を、やさしくリセットする習慣',lead:'うつむく時間が長い方へ',
+ c1:'スマホを見る時、頭は前に傾き、首や肩には頭の重さの何倍もの負担がかかるといわれます。長く続くと、首肩のこりにつながりやすくなります。',
+ c2:'やめる必要はありません。「目線を上げる」「30分に一度休む」「首を後ろへ引く」ことから、気軽に始めましょう。',
+ steps:[['あご引き体操','壁に背をつけて立ち、あごを軽く引いて頭を壁に近づけます。5秒×5回。'],['スマホは目線の高さで','肘をテーブルにつけ、画面を目の高さへ近づけて見ます。'],['首の側面ストレッチ','片手を頭にのせ、ゆっくり横に倒す。痛くない範囲で15秒×左右。']],
+ checks:['スマホを1日2時間以上見る','首の後ろが張る','頭が前に出ていると言われる','目が疲れやすい'],
+ tipT:'休憩のめやすは「30分に一度」',tipB:'30分に一度、遠くを見て首をぐるりと動かすだけでも、疲れのたまり方は変わります。',
+ greet:'新緑が目にまぶしい季節になりました。新しい生活のお疲れは出ていませんか。',
+ offerT:'首肩リセット特典',offerB:'ご来店の方に、首〜肩のゆるめケアを5分追加し、姿勢のチェックを行います。',next:'次号は「お出かけ前後のケア」です。'},
+5:{title:'お出かけ前後のひと手間で、疲れを残さない',lead:'連休や行楽の季節に',
+ c1:'歩く距離や立つ時間が増える季節は、普段使わない筋肉に疲れがたまりやすくなります。出かける前後のひと手間が、翌日の体を左右します。',
+ c2:'前は「温めて動かす」、後は「ゆるめて休める」。この2つを意識すると、お出かけの楽しさがぐっと長続きします。',
+ steps:[['出発前の足首まわし','足首を左右5回ずつ回し、ふくらはぎを軽くさすります。'],['帰宅後のふくらはぎのばし','壁に手をつき、片脚を後ろへ引いてかかとを床へ。20秒×左右。'],['お風呂でひざ裏をほぐす','湯船で足を伸ばし、ひざ裏をやさしくさすります。']],
+ checks:['歩いた翌日に足が張る','長く立つと腰がつらい','遠出すると疲れが残る','靴選びに自信がない'],
+ tipT:'旅行の荷物は「両肩のリュック」で',tipB:'片側だけの荷物は、肩や腰の左右差を生みやすくなります。両肩で背負い、重さは体に近づけましょう。',
+ greet:'さわやかな風の季節になりました。お出かけの予定はありますか。',
+ offerT:'お出かけ前後の特典',offerB:'ご来店の方に、足・腰のリカバリーケアを5分追加いたします。',next:'次号は「雨の日の室内体操」です。'},
+6:{title:'雨の日こそ、家の中で体をほぐす',lead:'外に出にくい日の、ゆるい体操習慣',
+ c1:'雨の日は外出が減って、体を動かす機会も少なくなりがちです。動かない日が続くと、肩や腰が固まり、気分も沈みやすくなります。',
+ c2:'大きな運動は不要です。台所やテレビの前など、暮らしの中で「ついで」にできる体操を取り入れてみましょう。',
+ steps:[['台所で足ふみ','シンクに手を添えて、かかとの上げ下げを20回。'],['テレビの前でももあげ','座って左右の太ももを交互に10回ずつ持ち上げます。'],['就寝前の背のび','仰向けで両手を頭の上へ、足先は反対へのばす。10秒×3回。']],
+ checks:['雨の日は動かなくなる','夕方に足がむくむ','気分が沈みがち','肩や腰が固まる'],
+ tipT:'部屋の湿度は「40〜60%」が目安',tipB:'湿度が高すぎるとカビやダニ、低すぎると乾燥の原因になります。除湿機やエアコンを上手に使いましょう。',
+ greet:'しとしとと雨の降る季節になりました。いかがお過ごしでしょうか。',
+ offerT:'雨の日おうちケア特典',offerB:'ご来店の方に、室内体操シート（イラスト付き）をプレゼントします。',next:'次号は「座ったままできる夏の体操」です。'},
+7:{title:'座ったままできる、夏の運動不足解消法',lead:'暑い日の、無理のない体づくり',
+ c1:'暑くて外へ出られない夏は、運動不足になりがちです。動かないと筋肉が弱まり、疲れやすさや肩こり・腰痛につながることがあります。',
+ c2:'椅子に座ったままでも、体は鍛えられます。冷房の効いた部屋で、まずは1日5分から始めましょう。',
+ steps:[['座ってももあげ','背すじを伸ばして座り、片脚ずつ太ももを持ち上げます。左右10回。'],['手を組んで背のび','両手を組んで上へのばし、息を吐きながら横へ倒します。左右5回。'],['立ち座りをゆっくり','椅子から立つ・座るをゆっくり10回。ひざがつま先より前に出ないように。']],
+ checks:['暑くて外出が減った','階段がきつくなった','座っている時間が長い','筋力の低下が気になる'],
+ tipT:'水分は「少しずつ、数回に分けて」',tipB:'一度に大量に飲むより、少量をこまめに飲む方が体になじみやすいといわれます。',
+ greet:'本格的な夏がやってきました。暑さの中、お変わりありませんか。',
+ offerT:'夏の体づくり特典',offerB:'ご来店の方に、体力チェック（立ち座り・バランス）をプラスします。',next:'次号は「帰省・長時間移動の対策」です。'},
+8:{title:'帰省・長時間の移動、腰と足を守る工夫',lead:'お盆の車・電車・飛行機での疲れ対策',
+ c1:'長く座りっぱなしになると、腰やお尻、足の血流が滞りやすくなります。移動後に疲れやだるさが出る方は、座り方に工夫が必要かもしれません。',
+ c2:'1〜2時間に一度、立ち上がって歩くだけでも体は楽になります。小さなクッションやタオルも、頼もしい味方です。',
+ steps:[['腰にタオルを丸めて','丸めたタオルを腰のくびれにあてると、背すじが保ちやすくなります。'],['座ったまま足首まわし','片脚ずつ足首を回します。ふくらはぎの巡りを促します。左右10回。'],['休憩でふくらはぎのばし','サービスエリアなどで、片脚を後ろへ引いて20秒のばします。']],
+ checks:['長時間座ると腰がつらい','移動後に足がむくむ','帰省で疲れが出やすい','荷物の持ち運びが不安'],
+ tipT:'長距離の荷物は「キャリー」を活用',tipB:'重い荷物を片手で持ち続けると肩・腰の負担が増えます。キャスター付きや両肩のリュックを使いましょう。',
+ greet:'お盆の季節となりました。帰省やお出かけの予定はいかがでしょうか。',
+ offerT:'帰省後のリカバリー特典',offerB:'お盆明けのご来店で、腰・足のリカバリーケアを5分追加します。',next:'次号は「噛む習慣と首肩」です。'},
+9:{title:'よく噛む習慣が、首と肩を楽にする？',lead:'あご・首・肩はつながっています',
+ c1:'食べ物を噛む時は、あごだけでなく首や肩の筋肉も一緒に動いています。早食いや片側噛みが続くと、あごまわりが緊張し、首肩にも影響しやすくなります。',
+ c2:'食欲の秋、ゆっくり味わって食べる習慣は、体を整えるきっかけにもなります。まずは一口30回を目標にしてみましょう。',
+ steps:[['左右均等に噛む','食事の時、意識して左右交互に噛みます。'],['あごをゆるめる','口を軽く開けたまま、舌を上あごにつけて10秒。力を抜きます。'],['首の後ろをのばす','あごを軽く引いて、首の後ろをのばす。15秒。']],
+ checks:['食事が早いと言われる','あごがカクカクする','奥歯を食いしばっている','首肩がよくこる'],
+ tipT:'食いしばりは「歯を離す」意識で',tipB:'集中している時、無意識に上下の歯を合わせている方が多いです。唇を閉じ、歯は軽く離しておくのが理想です。',
+ greet:'実りの秋を迎えました。おいしいものが楽しみな季節ですね。',
+ offerT:'首肩とあごのケア特典',offerB:'ご来店の方に、あご・首まわりのゆるめケアを5分追加いたします。',next:'次号は「転ばない体づくり」です。'},
+10:{title:'転ばない体づくりは、毎日のバランス習慣から',lead:'いつまでも自分の足で歩くために',
+ c1:'年齢とともに、足の筋力やバランス感覚は少しずつ変化します。つまずきやすさやふらつきを感じ始めたら、早めの対策が大切です。',
+ c2:'作業療法士として、毎日の暮らしの中でできる簡単なバランス練習をお伝えします。無理せず、安全第一で続けましょう。',
+ steps:[['歯みがき中の片脚立ち','洗面台に手を添えて片脚で10秒。左右2回ずつ。'],['つま先立ちゆっくり','壁や椅子を持ち、かかとをゆっくり上げ下げ。10回。'],['椅子からの立ち座り','手を使わず、ゆっくり立って座る。5〜10回。']],
+ checks:['最近つまずくことがある','片脚で靴下をはくのが不安','階段で手すりを使う','歩幅が小さくなった'],
+ tipT:'家の中の「ちょっとした段差」を見直す',tipB:'敷物のめくれやコード、床に置いた物は転倒の原因になります。夜間は足元灯があると安心です。',
+ greet:'さわやかな秋晴れの日が続いています。お出かけにも気持ちのよい季節ですね。',
+ offerT:'転ばない体づくり特典',offerB:'ご来店の方に、バランス・歩き方のチェックをプラスし、結果をお伝えします。',next:'次号は「庭仕事・落ち葉掃きの腰ケア」です。'},
+11:{title:'落ち葉掃き・庭仕事で、腰を痛めない動き方',lead:'寒くなる前の、屋外作業の注意点',
+ c1:'落ち葉掃きや庭の手入れは、前かがみや中腰の姿勢が長くなり、腰への負担が大きい作業です。気づいたら夕方に腰が重い、という方も多いのでは。',
+ c2:'道具の選び方と休憩のとり方で、体の負担は軽くなります。無理せず、少しずつ進めましょう。',
+ steps:[['ひざを使ってしゃがむ','腰を曲げず、ひざを曲げて体を落とします。'],['30分ごとに腰をのばす','両手を腰に当て、背中をそっと反らして10秒。'],['道具は長めの柄を','熊手やほうきは、腰を曲げずに使える長さを選びます。']],
+ checks:['庭仕事で腰が痛くなる','中腰の作業が多い','作業の翌日まで疲れが残る','道具の重さが気になる'],
+ tipT:'作業前に「手足を温める」',tipB:'寒い日は、始める前に軽く歩いて体を温めると、筋肉が動きやすくなります。',
+ greet:'木々が色づき、落ち葉の季節になりました。お変わりなくお過ごしでしょうか。',
+ offerT:'庭仕事の腰ケア特典',offerB:'ご来店の方に、腰・背中のこわばりを5分間追加でケアいたします。',next:'次号は「寝る前5分の整え」です。'},
+12:{title:'一年の疲れをためない、寝る前5分の整え',lead:'年末の慌ただしさに負けない習慣',
+ c1:'年末は予定が増え、睡眠時間が削られがちです。疲れがたまったまま新年を迎えないために、寝る前の5分を“整える時間”にしてみませんか。',
+ c2:'照明を少し落とし、体をゆっくり動かす。それだけで、眠りに入りやすくなる方も多いです。今年の感謝を込めて、体をねぎらいましょう。',
+ steps:[['ふくらはぎをさする','布団の上で足を伸ばし、足首からひざ裏へ向かってさすります。'],['ゆっくり深呼吸','4秒吸って6秒吐く。5回。目を閉じて行います。'],['手首・足首をまわす','布団の中で、手首と足首をゆっくり回します。']],
+ checks:['寝つきが悪い','夜中に目が覚める','寝ても疲れが取れない','年末は予定が詰まっている'],
+ tipT:'寝る前の飲み物は「白湯かカフェインレス」',tipB:'夕方以降のカフェインは、眠りの質に影響する場合があります。温かい白湯でほっとひと息つきましょう。',
+ greet:'今年も残りわずかとなりました。今年一年、本当にありがとうございました。',
+ offerT:'年越しの感謝特典',offerB:'年内のご来店の方に、感謝を込めて「年越しセルフケア表」をプレゼントします。',next:'来年も、毎月お届けします。どうぞよろしくお願いいたします。'}
+};
+const COND='ご予約時に「DMを見た」とお伝えください。他のサービス・クーポンとの併用はできません。';
+const DORM_T='おかえりなさい特典', DORM_B='しばらくぶりのご来店の方へ。今のお体の状態をあらためてゆっくり評価する時間（約10分）をサービスいたします。';
+
+/* =========================================================
+   状態
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nl=s=>esc(s).replace(/\n/g,'<br>');
+const LS='totonoe-dm-v1';
+const SEG={new:'新規',regular:'通い',dormant:'休眠'};
+const FS={std:1,large:1.2,xl:1.32};
+const FSN={std:'標準',large:'大',xl:'特大'};
+/* 季節のイラスト（SVG・コード内で描画。画像ファイル不要。グラデーション・葉脈・水彩のにじみ入り） */
+const FIL='<filter id="bl§" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4.5"/></filter>';
+const rg=(id,s,cx=.5,cy=.5,r=.6)=>`<radialGradient id="${id}§" cx="${cx}" cy="${cy}" r="${r}">${s.map(([o,c,a])=>`<stop offset="${o}" stop-color="${c}"${a!=null?` stop-opacity="${a}"`:''}/>`).join('')}</radialGradient>`;
+const lg=(id,s,x1=0,y1=0,x2=0,y2=1)=>`<linearGradient id="${id}§" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${s.map(([o,c,a])=>`<stop offset="${o}" stop-color="${c}"${a!=null?` stop-opacity="${a}"`:''}/>`).join('')}</linearGradient>`;
+const U=id=>`url(#${id}§)`;
+const G=(x,y,a,s,inner)=>`<g transform="translate(${x} ${y}) rotate(${a}) scale(${s})">${inner}</g>`;
+const PI=Math.PI,fx=n=>Math.round(n*100)/100;
+const wa=(cx,cy,rx,ry,c,o)=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${c}" opacity="${o}" filter="url(#bl§)"/>`;
+const br=(d,w)=>`<path d="${d}" stroke="#5e4029" stroke-width="${w}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#a9825a" stroke-width="${fx(w*.34)}" fill="none" stroke-linecap="round" opacity=".7" transform="translate(-.5 -.6)"/>`;
+const sk=(d,c,w)=>`<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+const dt=(x,y,r,f,o=1)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${f}" opacity="${o}"/>`;
+const pet=(len,wid,fill,st='#00000024')=>`<path d="M0 0C${-wid} ${-len*.28} ${-wid*.95} ${-len*.82} 0 ${-len}C${wid*.95} ${-len*.82} ${wid} ${-len*.28} 0 0Z" fill="${fill}" stroke="${st}" stroke-width=".35"/><path d="M0 ${-len*.12}V${-len*.7}" stroke="#0000001a" stroke-width=".4"/>`;
+const ring=(n,len,wid,fill,off=0)=>Array.from({length:n},(_,i)=>`<g transform="rotate(${fx(off+i*360/n)})">${pet(len,wid,fill)}</g>`).join('');
+const lea=(x,y,a,len,wid,f1,f2,vn=3)=>{let v='';for(let i=1;i<=vn;i++){const t=i/(vn+1),yy=-len*t;v+=`<path d="M0 ${fx(yy*.9)}L${fx(wid*.62)} ${fx(yy-len*.13)}M0 ${fx(yy*.9)}L${fx(-wid*.62)} ${fx(yy-len*.13)}" stroke="#ffffff55" stroke-width=".4" fill="none"/>`}
+ return G(x,y,a,1,`<path d="M0 0C${wid} ${-len*.25} ${wid*.9} ${-len*.75} 0 ${-len}C${-wid*.9} ${-len*.75} ${-wid} ${-len*.25} 0 0Z" fill="${f1}"/><path d="M0 0C${wid} ${-len*.25} ${wid*.9} ${-len*.75} 0 ${-len}Z" fill="${f2}" opacity=".5"/><path d="M0 -1Q.8 ${-len*.5} 0 ${-len+2}" stroke="#ffffff88" stroke-width=".55" fill="none"/>${v}`)};
+const blade=(x,y,x2,y2,cx,cy,w,f)=>`<path d="M${x-w} ${y}Q${cx-w} ${cy} ${x2} ${y2}Q${cx+w} ${cy} ${x+w} ${y}Z" fill="${f}"/><path d="M${x} ${y}Q${cx} ${cy} ${x2} ${y2}" stroke="#ffffff55" stroke-width=".5" fill="none"/>`;
+const ph=(n,R,cx,cy,fn)=>Array.from({length:n},(_,i)=>{const r=R*Math.sqrt((i+.5)/n),a=i*137.508*PI/180;return fn(fx(cx+r*Math.cos(a)),fx(cy+r*Math.sin(a)),i,r)}).join('');
+const stam=(n,len,c,dc)=>Array.from({length:n},(_,i)=>{const a=(i*360/n+10)*PI/180,x=fx(Math.sin(a)*len),y=fx(-Math.cos(a)*len);return `<path d="M0 0L${x} ${y}" stroke="${c}" stroke-width=".35"/>${dt(x,y,.8,dc)}`}).join('');
+const GRN=lg('lg',[[0,'#8fc196'],[1,'#4c7d58']]);
+const MOT_={
+/* 1月 水仙 */
+1:()=>({defs:GRN+rg('pw',[[0,'#fffdf6'],[.6,'#fbf4df'],[1,'#ecdfba']],.5,.7,.8)+rg('cu',[[0,'#ffe27a'],[1,'#f0a21b']]),
+ body:wa(80,38,64,26,'#f8e9ad',.5)+blade(62,76,34,24,38,54,3.6,U('lg'))+blade(80,76,90,18,78,46,3.2,U('lg'))+blade(98,76,130,28,106,54,3.6,U('lg'))+blade(70,76,52,34,56,58,2.6,U('lg'))+blade(92,76,110,40,98,60,2.4,U('lg'))+
+ sk('M34 28Q42 54 68 76','#6fa27a',1.6)+sk('M90 22Q82 50 80 76','#6fa27a',1.6)+sk('M130 32Q116 56 94 76','#6fa27a',1.6)+
+ [[34,24,1.1,-12],[90,18,1.25,8],[130,28,1.05,16],[110,44,.75,-20],[56,40,.7,22]].map(([x,y,s,r])=>G(x,y,r,s,ring(6,13,6.2,U('pw'))+`<ellipse cx="0" cy="0" rx="5.2" ry="4.6" fill="${U('cu')}" stroke="#d98a12" stroke-width=".5"/><ellipse cx="0" cy="-.6" rx="3.3" ry="2.8" fill="#f6b83a" opacity=".8"/>`+stam(6,2.2,'#c97d10','#c97d10'))).join('')}),
+/* 2月 梅 */
+2:()=>({defs:rg('ub',[[0,'#fff6f8'],[.55,'#f6b9c8'],[1,'#e57a9a']],.5,.55,.65),
+ body:wa(80,34,62,24,'#f9d3dd',.55)+br('M2 68C30 60 52 46 84 48S132 32 158 12',3.6)+br('M60 52C66 38 74 30 88 22',2.2)+br('M112 40C120 46 128 52 142 54',2)+br('M40 58C38 50 34 44 28 40',1.5)+
+ [[26,40,1.05,10],[56,48,1.1,-8],[88,22,1.15,20],[118,34,1.25,0],[144,14,1.1,-16],[100,54,.95,12],[78,46,.8,5]].map(([x,y,s,r])=>G(x,y,r,s,Array.from({length:5},(_,i)=>`<circle cx="0" cy="-5.2" r="5" fill="${U('ub')}" stroke="#d6687f33" stroke-width=".35" transform="rotate(${i*72})"/>`).join('')+stam(11,6.3,'#e07f98','#f2c04d')+dt(0,0,1.4,'#b83a62'))).join('')+
+ [[44,60],[70,42],[132,46],[102,36],[12,50],[150,22]].map(([x,y])=>dt(x,y,2.6,'#d9608a')+dt(x-.7,y-.8,.8,'#fff',.7)).join('')+dt(20,20,2,'#f6b9c8',.8)+dt(130,10,1.6,'#f6b9c8',.8)}),
+/* 3月 菜の花と蝶 */
+3:()=>({defs:GRN+lg('yl',[[0,'#ffe85f'],[1,'#f0b000']])+lg('bw',[[0,'#fffbe6'],[1,'#f4e08a']],0,0,1,1),
+ body:wa(70,38,62,26,'#fbeaa0',.5)+
+ [[40,24,30],[74,14,70],[108,26,106],[20,34,12]].map(([x,y,b])=>sk(`M${b} 76Q${b+2} ${(76+y)/2} ${x} ${y}`,'#5d9468',2)).join('')+
+ lea(48,64,-40,22,6,U('lg'),'#2e6b3f')+lea(86,66,38,22,6,U('lg'),'#2e6b3f')+lea(100,70,60,20,5.5,U('lg'),'#2e6b3f')+lea(28,68,-62,18,5,U('lg'),'#2e6b3f')+
+ [[40,24],[74,14],[108,26],[20,34]].map(([x,y])=>{let s='';[[0,-8,.9,1],[-2,-5,1,1],[2,-3,1.1,1],[-4,0,1.2,0],[4,1,1.2,0],[0,4,1.25,0],[-5,6,1.2,0],[5,7,1.2,0],[0,10,1.2,0]].forEach(([dx,dy,sz,bud])=>{s+=bud?dt(x+dx,y+dy,1.7*sz,'#9ec36a'):G(x+dx,y+dy,dx*3,sz,Array.from({length:4},(_,i)=>`<ellipse cx="0" cy="-2.7" rx="2" ry="2.8" fill="${U('yl')}" transform="rotate(${i*90})"/>`).join('')+dt(0,0,.9,'#c98a00'))});return s}).join('')+
+ G(134,28,18,1,`<path d="M0 0C-22 -22 -34 -2 -4 4C-24 12 -14 26 0 6Z" fill="${U('bw')}" stroke="#b9a24a" stroke-width=".5"/><path d="M0 0C22 -22 34 -2 4 4C24 12 14 26 0 6Z" fill="${U('bw')}" stroke="#b9a24a" stroke-width=".5"/><path d="M-20 -9C-24 -12 -28 -10 -26 -4M20 -9C24 -12 28 -10 26 -4" stroke="#d1b35a" stroke-width=".6" fill="none"/><ellipse cx="0" cy="2" rx="1.1" ry="6" fill="#5b4a2a"/><path d="M0 -4Q-4 -11 -8 -12M0 -4Q4 -11 8 -12" stroke="#5b4a2a" stroke-width=".5" fill="none"/>`)}),
+/* 4月 桜 */
+4:()=>({defs:rg('sa',[[0,'#fff'],[.45,'#fde3ea'],[1,'#f3a6bd']],.5,.85,.95)+lg('lb',[[0,'#b79a6a'],[1,'#7f7a45']]),
+ body:wa(80,34,64,24,'#fbd4df',.55)+br('M2 62C30 54 54 44 86 46S134 30 158 10',3.6)+br('M70 46C74 34 84 26 96 20',2)+br('M118 36C126 42 136 46 148 46',1.8)+br('M36 56C30 46 24 42 14 40',1.6)+
+ lea(60,48,-30,12,4.6,U('lb'),'#6b6a2c',2)+lea(108,38,34,12,4.6,U('lb'),'#6b6a2c',2)+lea(134,22,-20,10,4,U('lb'),'#6b6a2c',2)+
+ [[26,40,.78,10],[52,46,.9,-14],[88,43,1,6],[100,22,.8,-20],[124,32,.9,14],[144,16,.8,0],[70,32,.6,30],[16,54,.58,-30]].map(([x,y,s,r])=>G(x,y,r,s,Array.from({length:5},(_,i)=>`<g transform="rotate(${i*72})"><path d="M0 0C-7.5 -4 -9.5 -12 -4.4 -15.4L0 -12.4L4.4 -15.4C9.5 -12 7.5 -4 0 0Z" fill="${U('sa')}" stroke="#d7798f55" stroke-width=".35"/><path d="M0 -2L-1 -9M0 -2L1 -9M0 -2L0 -10" stroke="#e0708f" stroke-width=".35" opacity=".65"/></g>`).join('')+stam(13,5.8,'#f0a0b4','#c8365e')+dt(0,0,1.3,'#d1426a'))).join('')+
+ [[38,18,30],[76,10,-40],[10,26,60],[122,10,20],[60,64,80],[104,62,-20],[150,40,40]].map(([x,y,r])=>G(x,y,r,.5,`<path d="M0 0C-7.5 -4 -9.5 -12 -4.4 -15.4L0 -12.4L4.4 -15.4C9.5 -12 7.5 -4 0 0Z" fill="${U('sa')}" stroke="#d7798f55" stroke-width=".5"/>`)).join('')}),
+/* 5月 若葉とてんとう虫 */
+5:()=>({defs:lg('l1',[[0,'#c6e6a2'],[1,'#6fae5f']])+lg('l2',[[0,'#a7d58c'],[1,'#4d8f4b']])+rg('dw',[[0,'#fff',.95],[1,'#bfe6ee',.65]],.35,.3,.8),
+ body:wa(80,36,66,26,'#e0f1c8',.6)+br('M2 66C32 58 56 50 88 46S134 32 158 14',3.2)+br('M60 54C58 44 52 38 46 34',1.5)+br('M104 42C106 32 112 26 120 22',1.5)+
+ lea(26,60,-50,24,8,U('l1'),'#4d8f4b',4)+lea(40,56,30,26,9,U('l2'),'#3f7f40',4)+lea(52,46,-60,22,8,U('l1'),'#4d8f4b',4)+lea(64,52,38,28,10,U('l2'),'#3f7f40',4)+lea(78,48,-44,26,9,U('l1'),'#4d8f4b',4)+lea(94,42,34,30,10,U('l2'),'#3f7f40',4)+lea(112,38,-38,24,9,U('l1'),'#4d8f4b',4)+lea(126,28,40,24,8,U('l2'),'#3f7f40',4)+lea(142,18,-30,20,7,U('l1'),'#4d8f4b',3)+lea(46,34,10,14,5,U('l1'),'#4d8f4b',2)+lea(120,22,-8,14,5,U('l2'),'#3f7f40',2)+
+ dt(66,34,2.2,U('dw'))+dt(65.4,33.4,.6,'#fff')+dt(96,26,1.8,U('dw'))+dt(95.5,25.5,.5,'#fff')+
+ G(84,36,-24,1,`<ellipse cx="0" cy="0" rx="5" ry="4.2" fill="#d6322b"/><path d="M0 -4.2V4.2" stroke="#2b1b1b" stroke-width=".7"/><circle cx="-2.2" cy="-1" r=".9" fill="#2b1b1b"/><circle cx="2.2" cy="-1" r=".9" fill="#2b1b1b"/><circle cx="-2" cy="1.8" r=".7" fill="#2b1b1b"/><circle cx="2" cy="1.8" r=".7" fill="#2b1b1b"/><circle cx="0" cy="-5" r="1.7" fill="#2b1b1b"/><ellipse cx="-1.7" cy="-2.2" rx="1.2" ry=".7" fill="#fff" opacity=".35"/>`)}),
+/* 6月 紫陽花とカタツムリ */
+6:()=>({defs:GRN+rg('h1',[[0,'#e4edff'],[1,'#6f93e0']],.5,.4,.7)+rg('h2',[[0,'#efe6ff'],[1,'#9a78d8']],.5,.4,.7)+rg('h3',[[0,'#f6e8ff'],[1,'#b98ae0']],.5,.4,.7)+rg('h4',[[0,'#e6f0ff'],[1,'#8ab4ec']],.5,.4,.7)+rg('h5',[[0,'#ffe9f4'],[1,'#e08ab8']],.5,.4,.7)+lg('sh',[[0,'#e9c58a'],[1,'#b57a3c']],0,0,1,1),
+ body:wa(64,34,56,28,'#cddcfa',.55)+lea(28,68,-58,38,15,U('lg'),'#2e6b3f',5)+lea(100,70,52,36,14,U('lg'),'#2e6b3f',5)+
+ [[64,34,28,40],[116,44,17,22]].map(([cx,cy,R,n])=>ph(n,R,cx,cy,(x,y,i,r)=>G(x,y,i*47,.55+.35*(1-r/R)+(i%3)*.05,Array.from({length:4},(_,k)=>`<circle cx="0" cy="-4" r="4.1" fill="${U('h'+(1+((i*7+Math.round(r))%5)))}" stroke="#ffffff66" stroke-width=".3" transform="rotate(${k*90+20})"/>`).join('')+dt(0,0,.9,'#fff7c4')))).join('')+
+ G(136,66,0,1,`<path d="M-12 0Q-12 -3 -8 -3L6 -3Q12 -3 14 -7" stroke="#d9c7a4" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M12 -6L14 -11M15 -5L19 -9" stroke="#d9c7a4" stroke-width=".9"/><circle cx="-2" cy="-9" r="7" fill="${U('sh')}" stroke="#8f5f2c" stroke-width=".5"/><path d="M-2 -9m0 0a1.5 1.5 0 1 1 1.5 1.5a3 3 0 1 1 -3 -3a4.6 4.6 0 1 1 4.6 4.6" stroke="#8f5f2c" stroke-width=".6" fill="none"/>`)}),
+/* 7月 風鈴と朝顔 */
+7:()=>({defs:GRN+lg('gl',[[0,'#e8f6fb',.95],[1,'#9fd0e2',.85]],0,0,1,1)+rg('as',[[0,'#fff'],[.35,'#cfd8ff'],[1,'#5b70d6']],.5,.5,.6)+lg('tz',[[0,'#fff7ef'],[1,'#f4c9c0']]),
+ body:wa(60,34,54,26,'#d4ecf6',.55)+sk('M22 6H84','#7a5a3a',2.2)+sk('M53 6V14','#7a5a3a',1.2)+
+ G(53,36,0,1.1,`<path d="M-15 0C-15 -18 -8 -24 0 -24S15 -18 15 0Z" fill="${U('gl')}" stroke="#78a9bd" stroke-width=".8"/><path d="M-9 -4C-9 -14 -5 -19 -2 -20" stroke="#fff" stroke-width="1.2" fill="none" opacity=".8"/><path d="M-12 -7Q0 -2 12 -7M-13 -12Q0 -7 13 -12" stroke="#e9786c" stroke-width=".9" fill="none" opacity=".75"/><ellipse cx="0" cy="0" rx="15.5" ry="2.2" fill="#8fc0d4" stroke="#78a9bd" stroke-width=".6"/><path d="M0 2V12" stroke="#7a5a3a" stroke-width=".6"/><circle cx="0" cy="3" r="2" fill="#c9a24a"/><path d="M0 12L0 20" stroke="#7a5a3a" stroke-width=".6"/><rect x="-4.5" y="20" width="9" height="20" rx="1" fill="${U('tz')}" stroke="#d9a79d" stroke-width=".5"/><path d="M-2 25H2M-2 29H2" stroke="#e08a80" stroke-width=".7"/>`)+
+ sk('M96 74C90 60 100 50 112 52S128 66 120 74','#6fa27a',1.4)+sk('M112 52C116 42 126 40 132 44','#6fa27a',1.2)+
+ lea(100,64,-70,18,9,U('lg'),'#2e6b3f',3)+lea(128,66,64,16,8,U('lg'),'#2e6b3f',3)+
+ [[112,30,1.35],[140,44,1],[88,38,.75]].map(([x,y,s])=>G(x,y,0,s,`<path d="M0 -12C7 -14 14 -9 12 -2C15 5 9 12 2 12C-5 14 -13 8 -11 1C-14 -6 -8 -12 0 -12Z" fill="${U('as')}"/>`+Array.from({length:5},(_,i)=>`<path d="M0 0L0 -11" stroke="#fff" stroke-width=".7" opacity=".75" transform="rotate(${i*72})"/>`).join('')+`<circle r="2.6" fill="#fff"/>`+dt(0,0,1,'#f2d86a'))).join('')+
+ G(150,66,-20,1,`<path d="M0 0C-4 -6 -2 -12 2 -14C6 -10 4 -4 0 0Z" fill="#8aa0e0"/>`)}),
+/* 8月 ひまわり */
+8:()=>({defs:GRN+lg('po',[[0,'#ffc21f'],[1,'#f08a0b']])+lg('py',[[0,'#ffe14a'],[1,'#f6b705']])+rg('cd',[[0,'#4a2f17'],[.7,'#6b4423'],[1,'#8a5a2c']],.5,.5,.6),
+ body:wa(80,36,66,28,'#ffe9a0',.55)+sk('M80 76V54','#4f8a5b',4.5)+lea(66,68,-62,26,9,U('lg'),'#2e6b3f',4)+lea(96,66,60,26,9,U('lg'),'#2e6b3f',4)+
+ sk('M132 76V56','#4f8a5b',3)+sk('M30 76V58','#4f8a5b',2.6)+lea(120,68,50,16,6,U('lg'),'#2e6b3f',3)+
+ [[132,46,.62,10],[30,50,.5,-10]].map(([x,y,s,r])=>G(x,y,r,s,ring(18,20,5.6,U('py'),8)+`<circle r="10" fill="${U('cd')}"/>`)).join('')+
+ G(80,34,6,1,ring(21,23,6.4,U('po'),0)+ring(21,20,5.8,U('py'),8.5)+`<circle r="12.5" fill="${U('cd')}"/>`+ph(80,11.5,0,0,(x,y,i,r)=>dt(x,y,.7+.5*(r/12),i%3?'#2b1a0a':'#a9763a',.75))+`<circle r="12.5" fill="none" stroke="#c88a3a" stroke-width=".8" opacity=".6"/>`)}),
+/* 9月 月とすすき */
+9:()=>({defs:rg('mn',[[0,'#fffbe0'],[.7,'#f6dd7c'],[1,'#e8bd48']],.4,.35,.8)+lg('sb',[[0,'#8fae86'],[1,'#5c7e58']]),
+ body:wa(118,26,34,24,'#f6e2a0',.6)+wa(90,32,40,16,'#c9d6ea',.55)+
+ dt(118,26,15.5,U('mn'))+dt(111,22,3.2,'#d8b74a',.35)+dt(124,31,2.6,'#d8b74a',.3)+dt(122,18,1.8,'#d8b74a',.3)+
+ [[96,12,-12],[104,8,6],[88,6,-4]].map(([x,y,r])=>G(x,y,r,1,'<path d="M-6 0Q-3 -3 0 0Q3 -3 6 0Q3 -1 0 1Q-3 -1 -6 0Z" fill="#6b6a78"/>')).join('')+
+ blade(18,76,6,40,8,62,2.4,U('sb'))+blade(34,76,56,30,40,58,2.6,U('sb'))+blade(50,76,32,26,38,56,2.2,U('sb'))+blade(24,76,64,44,34,66,2.2,U('sb'))+
+ [['M26 76C28 56 44 36 68 22',-1],['M40 76C44 54 62 38 88 28',-1],['M52 76C60 58 76 46 100 40',-1],['M30 76C32 62 36 46 44 34',-1]].map(([d])=>sk(d,'#a58f5c',1.5)).join('')+
+ [[68,22,-60],[88,28,-70],[100,40,-80],[44,34,-30]].map(([x,y,a])=>G(x,y,a,1,Array.from({length:15},(_,i)=>{const t=i/14,yy=-t*24,w=(1-Math.abs(t-.35)*1.3)*7;return `<path d="M0 ${fx(yy)}Q${fx(w*.5)} ${fx(yy-3)} ${fx(w)} ${fx(yy-6)}M0 ${fx(yy)}Q${fx(-w*.5)} ${fx(yy-3)} ${fx(-w)} ${fx(yy-6)}" stroke="${i%2?'#cbb682':'#e7ddbf'}" stroke-width=".6" fill="none"/>`}).join('')+sk('M0 0L0 -24','#a58f5c',.8))).join('')}),
+/* 10月 紅葉 */
+10:()=>{const M='M0 -12L2 -7L6 -9L5 -4L10 -5L7 -1L11 1L5 3L6 7L1 5L1.4 11.5L-1.4 11.5L-1 5L-6 7L-5 3L-11 1L-7 -1L-10 -5L-5 -4L-6 -9L-2 -7Z';
+ const leaf=(x,y,s,r,g)=>G(x,y,r,s,`<path d="${M}" fill="${U(g)}" stroke="#7a2a1e55" stroke-width=".5" stroke-linejoin="round"/><path d="M0 8L0 -10M0 6L-8 -4M0 6L8 -4M0 4L-9 0M0 4L9 0" stroke="#ffffff55" stroke-width=".45" fill="none"/>`);
+ return {defs:lg('mr',[[0,'#e8602a'],[1,'#a8221b']])+lg('mo',[[0,'#f6c64a'],[1,'#d9672a']])+lg('my',[[0,'#efd860'],[1,'#98a63a']])+lg('mm',[[0,'#e8a02a'],[.55,'#d4442a'],[1,'#a0231c']]),
+ body:wa(80,36,66,26,'#f8d9b0',.55)+br('M4 70C34 66 58 60 84 52S128 44 156 50',2.6)+sk('M84 52C88 40 96 32 106 28','#7a4f2c',1.6)+sk('M52 62C50 52 44 46 36 42','#7a4f2c',1.6)+
+ leaf(36,34,2.0,-12,'mm')+leaf(66,30,2.5,14,'mr')+leaf(98,24,1.9,-10,'mo')+leaf(124,36,2.2,22,'mm')+leaf(148,24,1.3,-22,'my')+leaf(14,44,1.2,30,'mo')+leaf(84,56,1.5,160,'mr')+leaf(112,58,1.2,-140,'my')+leaf(50,58,1.1,120,'mo')}},
+/* 11月 銀杏 */
+11:()=>{const L=(x,y,s,r,g)=>G(x,y,r,s,`<path d="M0 4V0" stroke="#a98a3a" stroke-width="1.2"/><path d="M0 0L-12-10A16 16 0 0 1-1.6-15.6L0-12.5L1.6-15.6A16 16 0 0 1 12-10Z" fill="${U(g)}" stroke="#c9961a" stroke-width=".6" stroke-linejoin="round"/>`+Array.from({length:9},(_,i)=>{const t=i/8;return `<path d="M0 0L${fx(-12+24*t)} ${fx(-10-5.4*Math.sin(PI*t))}" stroke="#b98a1260" stroke-width=".4"/>`}).join(''));
+ return {defs:lg('ga',[[0,'#d8d04a'],[.55,'#f2c633'],[1,'#f0a81c']])+lg('gb',[[0,'#bccf50'],[1,'#e8c23a']])+rg('gn',[[0,'#fffaf0'],[1,'#e6d2a2']],.4,.35,.8),
+ body:wa(80,36,66,26,'#f9e6a0',.6)+br('M4 66C34 64 60 56 90 54S134 46 156 48',2.6)+sk('M70 56C70 46 66 40 58 36','#7a5a2c',1.5)+sk('M110 52C112 42 118 34 126 30','#7a5a2c',1.5)+
+ L(38,50,1.5,-28,'ga')+L(64,40,1.6,6,'gb')+L(92,48,1.55,-12,'ga')+L(122,34,1.55,18,'ga')+L(144,40,1.1,30,'gb')+L(20,62,1,-60,'gb')+L(110,64,1,150,'ga')+
+ [[72,60,3.2],[78,64,3.2],[68,65,3]].map(([x,y,r])=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*1.15}" fill="${U('gn')}" stroke="#c9a96a" stroke-width=".4"/>`+dt(x-r*.3,y-r*.4,r*.28,'#fff',.7)).join('')}},
+/* 12月 南天と雪の結晶 */
+12:()=>{const sn=(x,y,s)=>G(x,y,10,s,Array.from({length:6},(_,i)=>`<g transform="rotate(${i*60})"><path d="M0 0V-11M0 -6L-3 -9M0 -6L3 -9M0 -9L-2 -11M0 -9L2 -11" stroke="#7fa6cf" stroke-width=".9" fill="none" stroke-linecap="round"/></g>`).join('')+dt(0,0,1.2,'#a9c6e4'));
+ const berry=(x,y,r)=>dt(x,y,r,U('by'))+dt(x-r*.32,y-r*.34,r*.28,'#fff',.65);
+ return {defs:lg('nl',[[0,'#7fb588'],[.7,'#4d8a5a'],[1,'#b0493c']])+rg('by',[[0,'#ff9a88'],[.6,'#d93a35'],[1,'#a91d27']],.35,.3,.85),
+ body:wa(80,36,66,26,'#dfe9f6',.6)+br('M16 74C34 52 56 34 86 22',2.8)+br('M70 74C86 56 108 38 138 20',2.8)+sk('M46 46C44 36 40 30 34 26','#7a4f2c',1.4)+sk('M104 46C106 36 112 30 120 28','#7a4f2c',1.4)+
+ [[30,60,-70],[40,50,40],[50,42,-62],[62,34,34],[76,28,-52],[84,60,-70],[96,50,36],[108,42,-58],[120,32,40],[132,26,-40]].map(([x,y,a])=>lea(x,y,a,15,5.6,U('nl'),'#2f6b3f',2)).join('')+
+ [[86,22,3.4],[92,26,3.4],[82,28,3.4],[89,31,3.4],[96,21,3.2],[139,20,3.4],[133,25,3.4],[144,25,3.4],[138,30,3.4],[130,19,3.2],[60,36,3.2],[55,40,3.2],[64,41,3]].map(([x,y,r])=>berry(x,y,r)).join('')+
+ `<path d="M18 66C30 56 40 50 48 46" stroke="#f4f8fc" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/>`+sn(18,16,1.4)+sn(46,10,.9)+sn(150,50,1.2)+sn(112,64,.8)+sn(8,48,.7)}}
+};
+const motif=(mo,cls)=>{const f=MOT_[mo];if(!f)return '';const {defs,body}=f();const uid='m'+(++_mu);
+ return `<svg class="${cls}" viewBox="0 0 160 74" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs>${FIL}${defs}</defs>${body}</svg>`.replace(/§/g,uid)};
+let _mu=0;
+/* 文字を大きくして収まらない時の自動調整。
+   ①1枚目に収まらなければ「できた日カレンダー」を2枚目へ移す ②2枚目で豆知識→来月の予告の順に省略 ③それでも無理な場合のみカレンダーを省略
+   （コラム・セルフケア・特典・予約案内は省略しない） */
+function fit(root){const notes=[];
+ const over=sh=>{const i=sh.querySelector('.in');return i.scrollHeight>i.clientHeight+1};
+ const sheets=[...root.querySelectorAll('.sheet')];
+ for(let i=0;i+1<sheets.length;i+=2){const p1=sheets[i],p2=sheets[i+1],cal=p1.querySelector('[data-opt="1"]');
+  if(cal&&over(p1)){cal.classList.add('cal-s');notes.push('できた日カレンダーを少し小さくしました')}
+  if(cal&&over(p1)){cal.classList.remove('cal-s');cal.classList.add('cal-s');p2.querySelector('.in').insertBefore(cal,p2.querySelector('.in>.sp'));cal.dataset.opt='4';notes.push('できた日カレンダーを2枚目へ移動')}
+  [p1,p2].forEach(sh=>{for(let p=1;p<=4;p++){if(!over(sh))break;
+   sh.querySelectorAll('[data-opt="'+p+'"]').forEach(e=>{e.classList.add('hid');notes.push(e.dataset.name+'を省略')})}})}
+ return [...new Set(notes)]}
+const DEF_SALON={name:'整えサロン',tag:'作業療法士が運営する、からだを整えるプライベートサロン',owner:'',phone:'',addr:'',hours:'',url:'https://just-ot-goodful.github.io/totonoe-salon-app/',qr:'',costPer:140,unit:6000,start:'',fs:'large'};
+function ymNow(add=0){const d=new Date();if(d.getDate()>=20)add+=1;d.setMonth(d.getMonth()+add,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+let S;
+function load(){try{S=JSON.parse(localStorage.getItem(LS))}catch(e){S=null}
+ S=S||{};S.salon=Object.assign({},DEF_SALON,S.salon||{});S.issues=S.issues||{};S.customers=S.customers||[];S.log=S.log||{};S.hit=S.hit||{};S.seq=S.seq||0;S.pat=S.pat||{};
+ S.ym=S.ym||ymNow();if(!S.salon.start)S.salon.start=S.ym}
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){alert('保存に失敗しました（容量不足の可能性）。バックアップを取ってください。')}}
+load();
+
+const lastDay=(y,mo)=>{const d=new Date(y,mo+1,0);return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日'};
+/* 文面パターン：自動は「創刊した年=A、翌年=B、翌々年=A…」と交互 */
+function patOf(ym){const p=(S.pat||{})[ym];if(p==='A'||p==='B')return p;const y=+ym.slice(0,4),sy=+String(S.salon.start||ym).slice(0,4)||y;return (((y-sy)%2)+2)%2===0?'A':'B'}
+function defIssue(ym){const[y,mo]=ym.split('-').map(Number);const m=(patOf(ym)==='B'&&M2[mo])?M2[mo]:M[mo];
+ return {greet:m.greet,title:m.title,lead:m.lead,c1:m.c1,c2:m.c2,steps:m.steps.map(s=>[...s]),checks:[...m.checks],
+  checkNote:'2つ以上当てはまる方は、体の使い方や姿勢を見直すタイミングかもしれません。お気軽にご相談ください。',
+  tipT:m.tipT,tipB:m.tipB,offerT:m.offerT,offerB:m.offerB,offerCond:COND,expiry:lastDay(y,mo),
+  dormT:DORM_T,dormB:DORM_B,next:m.next,safe:'※体調や痛みに合わせ、無理のない範囲で行ってください。強い痛み・しびれがある場合は中止し、医療機関にご相談ください。',hand:true,cal:true,motif:true,goal:'auto',
+  bdayT:'お誕生月おめでとう特典',bdayB:'お誕生月中のご来店で、ケアを5分追加し、ささやかなプレゼントをご用意します。',
+  refT:'ご紹介特典',refB:'お友だち・ご家族をご紹介いただくと、お二人ともケアを5分追加いたします。'}}
+const issue=ym=>S.issues[ym]?Object.assign(defIssue(ym),S.issues[ym]):defIssue(ym);
+function ensureIssue(ym){S.issues[ym]=issue(ym);return S.issues[ym]}
+const volOf=ym=>{const[a,b]=S.salon.start.split('-').map(Number),[c,d]=ym.split('-').map(Number);return Math.max(1,(c-a)*12+(d-b)+1)};
+
+/* お客様 */
+const days=c=>c.last?Math.floor((Date.now()-new Date(c.last))/864e5):null;
+function seg(c){const d=days(c);if(d!==null&&d>=90)return 'dormant';if((+c.visits||0)<=1)return 'new';return 'regular'}
+function autoLine(c){const p=c.part?c.part.replace(/(の)$/,''):'',n=c.name||'';let ask=p?`${p}の調子はいかがですか？`:'その後、お体の調子はいかがですか？';if(c.memo)ask=`先日お話しされていた${c.memo}はいかがでしたか？`+ask;
+ const s=seg(c);
+ if(s==='new')return `${n}様、先日はご来店ありがとうございました。${ask}気になることがあれば、いつでもご相談くださいね。`;
+ if(s==='dormant')return `${n}様、ご無沙汰しております。${ask}無理のない範囲でお過ごしください。お会いできる日を楽しみにしています。`;
+ return `${n}様、いつもありがとうございます。${ask}これからも一緒に整えていきましょう。`}
+function newCust(o={}){return Object.assign({id:'c'+Date.now()+Math.random().toString(36).slice(2,5),no:++S.seq,name:'',zip:'',addr:'',last:'',visits:1,part:'',line:'',skip:false,birth:'',menu:'',memo:'',cycle:''},o)}
+const code=(ym,c)=>c?ym.slice(2,4)+ym.slice(5)+'-'+String(c.no).padStart(3,'0'):'';
+/* 次回のおすすめ時期（最終来店日＋来店周期） */
+function nextDue(c,ym){if(!c||!c.last)return '';const[y,mo]=ym.split('-').map(Number),cyc=+c.cycle||(+c.visits<=1?21:30);
+ const d=new Date(new Date(c.last).getTime()+cyc*864e5);if(d<new Date(y,mo-1,1))return 'そろそろ';
+ const p=d.getDate()<=10?'上旬':d.getDate()<=20?'中旬':'下旬';return (d.getMonth()+1)+'月'+p+'ごろ'}
+/* 今月DMを送る価値が高い人の判定 */
+function recommend(c,ym){const[y,mo]=ym.split('-').map(Number);
+ if(+c.birth===mo)return {go:true,why:'お誕生月（特典で来店理由をつくれる）'};
+ if(!c.last)return {go:false,why:'最終来店日が未入力'};
+ const d=Math.floor((new Date(y,mo-1,15)-new Date(c.last))/864e5),cyc=+c.cycle||(+c.visits<=1?21:30);
+ if(d>=365)return {go:true,why:'長期休眠（最後の呼びかけ）'};
+ if(d>=90)return {go:true,why:'休眠（半年以内は反応しやすい）'};
+ if(+c.visits<=1&&d>=10)return {go:true,why:'初回後フォロー（2回目が定着の分かれ目）'};
+ if(d>=cyc-7)return {go:true,why:'来店周期（'+cyc+'日）が近い'};
+ return {go:false,why:'直近に来店済み（今月は見送り可）'}}
+
+/* =========================================================
+   紙面（A4×2）
+   ========================================================= */
+function sheets(ym,c){
+ const I=issue(ym),A=S.salon,[y,mo]=ym.split('-').map(Number),sg=c?seg(c):null;
+ const dorm=sg==='dormant',bd=!!(c&&+c.birth===mo);
+ const offT=bd?I.bdayT:dorm?I.dormT:I.offerT,offB=bd?I.bdayB:dorm?I.dormB:I.offerB;
+ const to=(c&&c.name?`${esc(c.name)} 様`:'お客様へ')+(bd?'<small style="font-size:calc(9.5pt*var(--k,1));color:var(--brass);margin-left:3mm">お誕生月おめでとうございます</small>':'');
+ const nd=c?nextDue(c,ym):'';
+ const k=FS[(c&&c.fs)||S.salon.fs]||FS.large;
+ const cal=I.cal===false?'':`<div class="s-cal" data-opt="1" data-name="できた日カレンダー"><div class="cl">できた日に ○ をつけましょう（冷蔵庫などに貼って、続けるきっかけに）</div><div class="cg">${Array.from({length:31},(_,i)=>`<i>${i+1}</i>`).join('')}</div></div>`;
+ const handText=c?(c.line||autoLine(c)):'';
+ const handBlank=!c||I.hand===false;
+ const mt=I.motif===false?'':motif(mo,'');
+ const foot=n=>`<div class="s-foot"><span>${esc(A.name)}　${esc(A.tag)}</span><span>${y}年${mo}月号　${n}/2</span></div>`;
+ const head=`<div class="s-head"><div class="s-brand"><small>TOTONOE LETTER</small>${esc(A.name)}通信</div>${mt?`<div class="s-mot">${mt}</div>`:''}<div class="s-vol"><b>${y}年${mo}月号</b>Vol.${volOf(ym)}</div></div>`;
+ const p1=`<div class="sheet" style="--k:${k}"><div class="in">${head}
+  <div class="s-to">${to}</div>
+  <div class="s-greet">${nl(I.greet)}</div>
+  <div class="s-col"><div class="s-lab">TOPIC　今月のからだコラム</div><h2>${esc(I.title)}</h2><div class="s-lead">${esc(I.lead)}</div><p>${nl(I.c1)}</p><p>${nl(I.c2)}</p></div>
+  <div><div class="s-sec">今日からできる　1分セルフケア</div><div class="s-steps">${I.steps.map((s,i)=>`<div class="s-step"><div class="s-no">${i+1}</div><div><b>${esc(s[0])}</b><span>${nl(s[1])}</span></div></div>`).join('')}</div><div class="s-safe">${nl(I.safe)}</div>${cal}</div>
+  <div class="sp"></div>${foot(1)}</div></div>`;
+ const p2=`<div class="sheet" style="--k:${k}">${mt?`<div class="s-mot2">${mt}</div>`:''}<div class="in">
+  <div><div class="s-sec">からだチェック　いくつ当てはまりますか？</div><ul class="s-checks">${I.checks.map(t=>`<li>${esc(t)}</li>`).join('')}</ul><div class="s-cknote">${nl(I.checkNote)}</div></div>
+  <div class="s-tip" data-opt="2" data-name="豆知識"><div class="s-lab">MEMO　ちょっとした豆知識</div><b>${esc(I.tipT)}</b>${nl(I.tipB)}</div>
+  <div class="s-coupon"><div class="cl"><div class="s-lab">${bd?'HAPPY BIRTHDAY':dorm?'WELCOME BACK':'SPECIAL'}　今月の特典</div><div class="code">${c?'No. '+code(ym,c):''}</div></div>
+   <h2>${esc(offT)}</h2><div class="cb">${nl(offB)}</div>
+   <div class="ex">有効期限：${esc(I.expiry)}まで</div><div class="cc">${nl(I.offerCond)}</div></div>
+  <div class="s-book"><div class="s-qr">${A.qr?`<img src="${A.qr}">`:'QRコード<br>未登録'}</div>
+   <div><b>ご予約はこちらから</b>${A.url?`<div>${esc(A.url)}</div>`:''}${A.phone?`<div>お電話：${esc(A.phone)}</div>`:''}${A.hours?`<div>受付：${esc(A.hours)}</div>`:''}${A.addr?`<div>${esc(A.addr)}</div>`:''}</div></div>
+  <div class="s-two"><div class="s-nv"><div class="s-lab">NEXT VISIT　次回のご予約メモ</div>
+    <div class="nvt">${nd?`次回のおすすめ：<b>${esc(nd)}</b>`:'次回のご予約日を、ここにメモしておきましょう'}${c&&c.menu?`<br><span class="nvm">前回：${esc(c.menu)}</span>`:''}</div>
+    <div class="nvw">ご予約日　　　月　　　日　　　：　　</div></div>
+   <div class="s-ref"><div class="s-lab">REFERRAL　大切な方へ</div><b>${esc(I.refT)}</b><div>${nl(I.refB)}</div></div></div>
+  <div class="s-hand ${handBlank?'blank':''}"><div class="hl">MESSAGE　${esc(A.owner||'施術者')}より</div><div class="ht">${handBlank?'':esc(handText)}</div><div class="hs">${handBlank?'':esc(A.name+(A.owner?'　'+A.owner:''))}</div></div>
+  <div class="s-next" data-opt="3" data-name="来月の予告">${nl(I.next)}</div>
+  <div class="sp"></div>${foot(2)}</div></div>`;
+ return p1+p2}
+
+/* =========================================================
+   タブ
+   ========================================================= */
+const TABS=[['issue','① 今月のDM'],['cust','② お客様'],['print','③ 印刷'],['eff','④ 効果測定'],['set','⑤ サロン情報']];
+function go(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='p-'+id));
+ document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.id===id));
+ ({issue:renderIssue,cust:renderCust,print:renderPrint,eff:renderEff,set:renderSet})[id]();scrollTo(0,0)}
+$('#tabs').innerHTML=TABS.map(([i,l])=>`<button class="tab" data-id="${i}" onclick="go('${i}')">${l}</button>`).join('');
+
+/* ---------- ① 今月のDM ---------- */
+const FIELDS=[
+ ['導入のあいさつ（季節のひとこと）','greet','ta'],
+ ['コラム見出し','title','in'],['サブタイトル','lead','in'],['コラム本文①','c1','ta'],['コラム本文②','c2','ta'],
+ ['セルフケア 1：タイトル','steps.0.0','in'],['　　　　　　　説明','steps.0.1','ta'],
+ ['セルフケア 2：タイトル','steps.1.0','in'],['　　　　　　　説明','steps.1.1','ta'],
+ ['セルフケア 3：タイトル','steps.2.0','in'],['　　　　　　　説明','steps.2.1','ta'],
+ ['注意書き','safe','ta'],
+ ['からだチェック ①','checks.0','in'],['　　　　　　　 ②','checks.1','in'],['　　　　　　　 ③','checks.2','in'],['　　　　　　　 ④','checks.3','in'],['チェック結果の案内','checkNote','ta'],
+ ['豆知識：見出し','tipT','in'],['豆知識：本文','tipB','ta'],
+ ['特典：タイトル（通常）','offerT','in'],['特典：内容（通常）','offerB','ta'],
+ ['特典：タイトル（休眠のお客様向け）','dormT','in'],['特典：内容（休眠のお客様向け）','dormB','ta'],
+ ['特典：条件・注意','offerCond','ta'],['特典：有効期限','expiry','in'],
+ ['来月の予告','next','in'],
+ ['誕生月特典：タイトル','bdayT','in'],['誕生月特典：内容','bdayB','ta'],['紹介特典：タイトル','refT','in'],['紹介特典：内容','refB','ta']];
+const GOALS={auto:'おまかせ（来店データから判断）',new:'初回のお客様を2回目につなげる',regular:'通っている方の継続・来店間隔を保つ',dormant:'しばらく来ていない方を呼び戻す',refer:'ご紹介（新規のお客様）を増やす'};
+function shiftYm(ym,k){const d=new Date(+ym.slice(0,4),+ym.slice(5)-1+k,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function parseJa(s){const m=String(s||'').match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);return m?new Date(+m[1],+m[2]-1,+m[3]):null}
+/* リピート導線チェック */
+function lint(ym){const I=issue(ym),A=S.salon,[y,mo]=ym.split('-').map(Number),r=[];
+ const ex=parseJa(I.expiry),days=ex?Math.round((ex-new Date(y,mo-1,1))/864e5):null;
+ r.push([days!==null&&days>=30&&days<=90,'特典に期限がある','期限は「発行月の翌月末」前後（30〜90日）が目安。短すぎると使えず、長すぎると先延ばしされます。']);
+ r.push([(I.offerB||'').length>=20,'特典の中身が具体的','「何がもらえるか」が一目で分かる文面にしましょう。']);
+ r.push([!!(A.qr&&(A.phone||A.url)),'予約の入口が2つ（QR＋電話/URL）','予約のハードルを下げます。⑤サロン情報で登録してください。']);
+ r.push([!!(I.refB||'').trim(),'紹介特典がある','既存のお客様経由の新規は定着率が高い傾向があります。']);
+ r.push([!!(I.safe||'').trim(),'安全の注意書きがある','信頼感と安心につながります。']);
+ const prevT=[12,24].map(k=>shiftYm(ym,-k)).filter(p=>p>=S.salon.start).map(p=>issue(p).title);
+ r.push([!prevT.includes(I.title),'昨年・一昨年と同じテーマではない','毎年同じ内容だと読まれにくくなります。文面パターンを切り替えるか、AI下書きで新しいテーマにしましょう。']);
+ const live=S.customers.filter(c=>!c.skip);
+ const dormN=live.filter(c=>seg(c)==='dormant').length;
+ if(dormN)r.push([!!(I.dormT&&I.dormB),'休眠のお客様（'+dormN+'名）向けの特典がある','「久しぶりでも行きやすい」特典が呼び戻しの鍵です。']);
+ const noLast=live.filter(c=>!c.last).length;
+ if(live.length)r.push([noLast===0,'全員に最終来店日が入っている','未入力の方は、次回のおすすめ時期や送付推薦が出せません。（未入力：'+noLast+'名）']);
+ const bdN=live.filter(c=>+c.birth===mo).length;
+ if(bdN)r.push([true,'今月のお誕生月の方：'+bdN+'名','お誕生月特典が自動で印字されます。']);
+ return r}
+function lintHtml(){const r=lint(S.ym),ok=r.filter(x=>x[0]).length;
+ return `<div class="card"><h3>リピート導線チェック<small>${ok}/${r.length}</small></h3><div class="bar"><i style="width:${ok/r.length*100}%"></i></div>`+
+ r.map(([o,t,h])=>`<div style="margin:5px 0;font-size:13.5px"><span style="color:${o?'var(--ok)':'var(--red)'};font-weight:700">${o?'✓':'△'}</span> ${t}${o?'':`<div class="hint" style="margin-left:18px">${h}</div>`}</div>`).join('')+`</div>`}
+const getp=(o,p)=>p.split('.').reduce((a,k)=>a?.[k],o);
+const setp=(o,p,v)=>{const k=p.split('.'),l=k.pop();k.reduce((a,x)=>a[x],o)[l]=v};
+function renderIssue(){
+ $('#ymSel').value=S.ym;
+ const I=issue(S.ym);
+ const groups=[['コラム',0,5],['セルフケア',5,12],['からだチェック・豆知識',12,19],['特典（クーポン）',19,25],['その他',25,26],['誕生月・紹介',26,30]];
+ $('#editor').innerHTML=
+  `<div class="card"><h3>この月の文面<small>${S.ym}</small></h3><p class="hint">月ごとの初期文面が入っています。自由に書き換えてください（自動保存）。</p>
+   <label class="f">文面パターン（毎年同じ内容にならないよう、年ごとに自動で切り替えます）</label><select class="in" onchange="setPat(this.value)">
+    <option value="auto" ${(S.pat[S.ym]||'auto')==='auto'?'selected':''}>自動（この年はパターン${patOf(S.ym)}）</option>
+    <option value="A" ${S.pat[S.ym]==='A'?'selected':''}>パターンA：${esc(M[+S.ym.slice(5)].title)}</option>
+    <option value="B" ${S.pat[S.ym]==='B'?'selected':''}>パターンB：${esc(M2[+S.ym.slice(5)].title)}</option></select>
+   <label class="f">今月の狙い（AI下書きと送付先の判断に使います）</label><select class="in" onchange="setGoal(this.value)">${Object.entries(GOALS).map(([k,v])=>`<option value="${k}" ${I.goal===k?'selected':''}>${v}</option>`).join('')}</select>
+   <label class="f">紙面の文字サイズ（全体の標準。高齢の方は②お客様で個別に「特大」を指定できます）</label><select class="in" onchange="setFs(this.value)">${Object.keys(FSN).map(k=>`<option value="${k}" ${S.salon.fs===k?'selected':''}>${FSN[k]}${k==='large'?'（本文 約12pt・おすすめ）':k==='xl'?'（本文 約13pt）':'（本文 約10pt）'}</option>`).join('')}</select>
+   <div class="hint">文字を大きくして2枚に収まらない場合は、「できた日カレンダー」「豆知識」「来月の予告」の順に自動で省略します。</div>
+   <div style="margin-top:8px"><label><input type="checkbox" ${I.motif===false?'':'checked'} onchange="setMotif(this.checked)"> 季節のイラストを載せる（月ごとに自動）</label></div>
+   <div style="margin-top:8px"><label><input type="checkbox" ${I.cal===false?'':'checked'} onchange="setCal(this.checked)"> セルフケア「できた日」カレンダーを載せる</label></div>
+   <div style="margin-top:8px"><label><input type="checkbox" ${I.hand===false?'':'checked'} onchange="setHand(this.checked)"> 手書き風のひとこと欄にお客様ごとのメッセージを印字する</label><div class="hint" style="margin-left:22px">オフ：空欄（罫線）にして、手書きで書き込めます</div></div>
+   <button class="btn warn sm" style="margin-top:10px" onclick="resetIssue()">この月を初期文面に戻す</button></div>`+
+  lintHtml()+`<div class="card" style="background:#eef3ee"><h3>AIで下書き<small>AI DRAFT</small></h3><p class="hint">「自動」または「指示書」に沿って、この月の文面全体を下書きします。反映前に確認でき、元に戻せます。</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" onclick="openAi()">✨ AIで下書きを作る</button>${AIUNDO[S.ym]?'<button class="btn sub" onclick="undoAi()">直前のAI反映を元に戻す</button>':''}</div></div>`+
+  groups.map(([g,a,b])=>`<div class="card"><h3>${g}</h3>${FIELDS.slice(a,b).map(([lb,p,t])=>{const v=esc(getp(I,p));
+   return `<label class="f">${lb}</label>`+(t==='ta'?`<textarea class="in" data-p="${p}" oninput="edIssue(this)">${v}</textarea>`:`<input class="in" data-p="${p}" value="${v}" oninput="edIssue(this)">`)}).join('')}</div>`).join('');
+ // プレビュー宛先
+ const opts=[`<option value="">宛名なし（汎用版）</option>`].concat(S.customers.map(c=>`<option value="${c.id}">${esc(c.name||'(名前未入力)')}（${SEG[seg(c)]}）</option>`));
+ const cur=$('#pvCust').value;$('#pvCust').innerHTML=opts.join('');if(S.customers.some(c=>c.id===cur))$('#pvCust').value=cur;
+ // 未設定チェック
+ const A=S.salon,miss=[];if(!A.owner)miss.push('施術者名');if(!A.phone)miss.push('電話番号');if(!A.addr)miss.push('住所');if(!A.hours)miss.push('営業・受付時間');if(!A.qr)miss.push('予約QR');
+ $('#missing').innerHTML=miss.length?`<div class="warnbox">DMに載せる情報が未設定です：<b>${miss.join('、')}</b>　→ <a href="#" onclick="go('set');return false">⑤ サロン情報で設定する</a></div>`:'';
+ renderPreview()}
+function edIssue(el){const I=ensureIssue(S.ym);setp(I,el.dataset.p,el.value);save();renderPreview()}
+function setPat(v){if(S.issues[S.ym]&&!confirm('文面パターンを切り替えます。この月の編集内容は失われ、選んだパターンの初期文面になります。よろしいですか？')){renderIssue();return}
+ delete S.issues[S.ym];if(v==='auto')delete S.pat[S.ym];else S.pat[S.ym]=v;save();renderIssue()}
+function setMotif(v){ensureIssue(S.ym).motif=v;save();renderPreview()}
+function setFs(v){S.salon.fs=v;save();renderPreview()}
+function setGoal(v){ensureIssue(S.ym).goal=v;save()}
+function setCal(v){ensureIssue(S.ym).cal=v;save();renderPreview()}
+function setHand(v){ensureIssue(S.ym).hand=v;save();renderPreview()}
+function resetIssue(){if(!confirm(S.ym+' の文面を初期状態に戻します。編集内容は失われます。よろしいですか？'))return;delete S.issues[S.ym];save();renderIssue()}
+function renderPreview(){
+ const id=$('#pvCust').value,c=S.customers.find(x=>x.id===id)||null;
+ const box=$('#pvPages');box.innerHTML=sheets(S.ym,c);
+ if(document.fonts&&!window._fr){window._fr=1;document.fonts.ready.then(()=>renderPreview())}
+ const hid=fit(box);$('#fitMsg').textContent=hid.length?'※ 文字が大きいため、紙面を自動調整しています：'+hid.join('、'):'';
+ const avail=$('#pvScroll').clientWidth-30,z=Math.min(1,Math.max(.3,avail/793.7));
+ box.querySelectorAll('.sheet').forEach(sh=>{
+  const w=document.createElement('div');w.className='pvpage';w.style.width=(793.7*z)+'px';w.style.height=(1122.5*z)+'px';
+  sh.style.zoom=z;sh.parentNode.insertBefore(w,sh);w.appendChild(sh);
+  const inn=sh.querySelector('.in');if(inn.scrollHeight>inn.clientHeight+2){const o=document.createElement('div');o.className='ovf';o.textContent='⚠ 文字量がはみ出しています';w.appendChild(o)}})}
+$('#ymSel').onchange=e=>{if(!e.target.value)return;S.ym=e.target.value;save();renderIssue()};
+$('#pvCust').onchange=renderPreview;
+addEventListener('resize',()=>{if($('#p-issue').classList.contains('on'))renderPreview()});
+
+/* ---------- ② お客様 ---------- */
+function renderCust(){
+ const h=`<thead><tr><th>氏名</th><th>〒</th><th>住所</th><th>最終来店日</th><th>来店回数</th><th>気になる部位</th><th>前回メニュー</th><th>話題メモ</th><th>誕生月</th><th>来店周期(日)</th><th>DMの文字</th><th>区分</th><th style="min-width:260px">手書きひとこと（空欄は自動）</th><th>DM不要</th><th></th></tr></thead>`;
+ const rows=S.customers.map(c=>{const s=seg(c);return `<tr>
+  <td><input type="text" value="${esc(c.name)}" data-f="name" data-id="${c.id}" style="min-width:110px"></td>
+  <td><input type="text" value="${esc(c.zip)}" data-f="zip" data-id="${c.id}" style="width:90px"></td>
+  <td><input type="text" value="${esc(c.addr)}" data-f="addr" data-id="${c.id}" style="min-width:220px"></td>
+  <td><input type="date" value="${esc(c.last)}" data-f="last" data-id="${c.id}"></td>
+  <td><input type="number" min="0" value="${esc(c.visits)}" data-f="visits" data-id="${c.id}" style="width:64px"></td>
+  <td><input type="text" value="${esc(c.part)}" data-f="part" data-id="${c.id}" style="width:100px" placeholder="例：肩・腰"></td>
+  <td><input type="text" value="${esc(c.menu)}" data-f="menu" data-id="${c.id}" style="min-width:130px" placeholder="例：肩こり60分"></td>
+  <td><input type="text" value="${esc(c.memo)}" data-f="memo" data-id="${c.id}" style="min-width:150px" placeholder="例：お孫さんの運動会"></td>
+  <td><input type="number" min="1" max="12" value="${esc(c.birth)}" data-f="birth" data-id="${c.id}" style="width:60px"></td>
+  <td><input type="number" min="7" max="365" value="${esc(c.cycle)}" data-f="cycle" data-id="${c.id}" style="width:70px" placeholder="自動"></td>
+  <td><select data-f="fs" data-id="${c.id}" style="border:1px solid var(--line);border-radius:6px;padding:4px"><option value="">全体の設定</option>${Object.keys(FSN).map(k=>`<option value="${k}" ${c.fs===k?'selected':''}>${FSN[k]}</option>`).join('')}</select></td>
+  <td><span class="badge b-${s}">${SEG[s]}</span></td>
+  <td><input type="text" value="${esc(c.line)}" data-f="line" data-id="${c.id}" placeholder="${esc(autoLine(c))}"></td>
+  <td style="text-align:center"><input type="checkbox" ${c.skip?'checked':''} data-f="skip" data-id="${c.id}"></td>
+  <td><button class="btn warn sm" onclick="delCust('${c.id}')">削除</button></td></tr>`}).join('');
+ $('#custTbl').innerHTML=h+'<tbody>'+(rows||`<tr><td colspan="15" class="hint" style="padding:16px">まだお客様が登録されていません。「＋ お客様を追加」または一括取り込みをご利用ください。</td></tr>`)+'</tbody>';
+ document.querySelectorAll('#custTbl [data-f]').forEach(el=>el.onchange=()=>{const c=S.customers.find(x=>x.id===el.dataset.id);
+  c[el.dataset.f]=el.type==='checkbox'?el.checked:el.value;save();renderCust()})}
+function addCust(){S.customers.push(newCust({visits:1}));save();renderCust()}
+function delCust(id){const c=S.customers.find(x=>x.id===id);if(!confirm((c.name||'このお客様')+' を削除します。よろしいですか？'))return;S.customers=S.customers.filter(x=>x.id!==id);save();renderCust()}
+function autoLineAll(){let n=0;S.customers.forEach(c=>{if(!c.line&&c.name){c.line=autoLine(c);n++}});save();renderCust();alert(n+'名分のひとことを作成しました。内容は自由に書き換えられます。')}
+function toggleImport(){const b=$('#importBox');b.style.display=b.style.display==='none'?'block':'none'}
+function doImport(){const t=$('#importTxt').value.trim();if(!t)return;let n=0;
+ t.split(/\r?\n/).forEach((ln,i)=>{if(!ln.trim())return;const p=ln.includes('\t')?ln.split('\t'):ln.split(',');const name=(p[0]||'').trim();
+  if(!name||(i===0&&/氏名|名前/.test(name)))return;
+  S.customers.push(newCust({name,zip:(p[1]||'').trim(),addr:(p[2]||'').trim(),last:normDate(p[3]),visits:parseInt(p[4])||1,part:(p[5]||'').trim(),menu:(p[6]||'').trim(),memo:(p[7]||'').trim(),birth:parseInt(p[8])||''}));n++});
+ save();$('#importTxt').value='';toggleImport();renderCust();alert(n+'名を取り込みました。')}
+function normDate(s){s=(s||'').trim().replace(/[\/.]/g,'-');const m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);return m?`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`:''}
+function exportCsv(){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ const rows=[['氏名','郵便番号','住所','最終来店日','来店回数','気になる部位','前回メニュー','話題メモ','誕生月']].concat(S.customers.map(c=>[c.name,c.zip,c.addr,c.last,c.visits,c.part,c.menu,c.memo,c.birth]));
+ dl('お客様リスト.csv','﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv')}
+function sampleCust(){if(S.customers.length&&!confirm('既存のお客様に加えてサンプルを追加します。よろしいですか？'))return;
+ const d=n=>{const x=new Date(Date.now()-n*864e5);return x.toISOString().slice(0,10)};
+ S.customers.push(newCust({name:'山田 花子',zip:'000-0001',addr:'（サンプル）東京都〇〇区1-2-3',last:d(30),visits:5,part:'肩'}),
+  newCust({name:'佐藤 太郎',zip:'000-0002',addr:'（サンプル）東京都〇〇区4-5-6',last:d(12),visits:1,part:'腰'}),
+  newCust({name:'鈴木 一郎',zip:'000-0003',addr:'（サンプル）東京都〇〇区7-8-9',last:d(150),visits:3,part:'膝'}));
+ save();renderCust()}
+
+/* ---------- ③ 印刷 ---------- */
+let SEL=null;
+function renderPrint(){
+ $('#prMonth').textContent=S.ym.replace('-','年')+'月号';
+ if(!SEL)SEL=new Set(S.customers.filter(c=>!c.skip).map(c=>c.id));
+ const rows=S.customers.map(c=>{const s=seg(c),rc=recommend(c,S.ym);return `<tr><td style="width:40px;text-align:center"><input type="checkbox" data-id="${c.id}" ${SEL.has(c.id)&&!c.skip?'checked':''} ${c.skip?'disabled':''}></td>
+  <td>${esc(c.name)}</td><td><span class="badge b-${s}">${SEG[s]}</span></td><td style="font-size:12.5px;color:${rc.go?'var(--moss-d)':'var(--mute)'}">${rc.go?'★ ':''}${esc(rc.why)}</td><td>${esc(c.addr)}</td><td>${code(S.ym,c)}</td><td>${c.skip?'<span class="hint">DM不要</span>':''}${(S.log[S.ym]||[]).some(x=>x.id===c.id)?'<span class="hint">記録済</span>':''}</td></tr>`}).join('');
+ $('#prTbl').innerHTML=`<thead><tr><th></th><th>氏名</th><th>区分</th><th>今月送る理由（★＝おすすめ）</th><th>住所</th><th>クーポンNo.</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="hint" style="padding:14px">お客様が未登録です。②で追加するか、「宛名なし版」をご利用ください。</td></tr>'}</tbody>`;
+ $('#prTbl').querySelectorAll('input[data-id]').forEach(el=>el.onchange=()=>{el.checked?SEL.add(el.dataset.id):SEL.delete(el.dataset.id);renderEnvPv()});
+ renderEnvPv()}
+function selRec(){SEL=new Set(S.customers.filter(c=>!c.skip&&recommend(c,S.ym).go).map(c=>c.id));renderPrint();$('#chkAll').checked=false}
+function selAll(v){S.customers.forEach(c=>{if(!c.skip)v?SEL.add(c.id):SEL.delete(c.id)});renderPrint();$('#chkAll').checked=v}
+function runPrint(html,size){const pa=$('#printArea');pa.innerHTML=html;
+ // 画面外に表示して、はみ出しを自動調整してから印刷する
+ pa.style.cssText='display:block;position:absolute;left:-99999px;top:0';const hid=fit(pa);pa.style.cssText='';
+ if(hid.length)console.info('省略：'+hid.join('、'));
+ let st=$('#pageSz');if(st)st.remove();
+ if(size){st=document.createElement('style');st.id='pageSz';st.textContent='@media print{@page{size:'+size+';margin:0}}';document.head.appendChild(st)}
+ // 印刷前にフォント読み込み完了を待つ
+ (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(()=>{window.print()},150))}
+addEventListener('afterprint',()=>{const st=$('#pageSz');if(st)st.remove()});
+/* 封筒 */
+const KN='〇一二三四五六七八九';
+const tate=s=>String(s||'').replace(/[0-9０-９]/g,d=>KN[+d.normalize('NFKC')]).replace(/[-‐−ー－]/g,'ー');
+function envelope(c){const A=S.salon,z=(c.zip||'').replace(/\D/g,'').padEnd(7,' ').slice(0,7).split('');
+ const az=(A.zip||'').trim();
+ const adr=(c.addr||'').trim(),cut=22,l1=tate(adr.slice(0,cut)),l2=tate(adr.slice(cut));
+ return `<div class="env"><div class="zip">${z.map((d,i)=>`<i class="${i===3?'g':''}">${esc(d.trim())}</i>`).join('')}</div>
+  <div class="adr">${esc(l1)}</div>${l2?`<div class="adr l2">${esc(l2)}</div>`:''}
+  <div class="nm">${esc(c.name)}<small>様</small></div>
+  <div class="snd"><b>${esc(A.name)}</b>${A.addr?'<br>'+esc(tate(A.addr)):''}${A.phone?'<br>'+esc(tate(A.phone)):''}</div></div>`}
+function envTargets(){return S.customers.filter(c=>SEL.has(c.id)&&!c.skip)}
+function printEnv(){const l=envTargets();if(!l.length){alert('印刷するお客様を選んでください。');return}
+ const ng=l.filter(c=>!c.addr||!c.zip).map(c=>c.name||'(名前未入力)');
+ if(ng.length&&!confirm('住所または郵便番号が未入力のお客様がいます：\n'+ng.join('、')+'\n\nこのまま印刷しますか？'))return;
+ runPrint(l.map(envelope).join(''),'120mm 235mm')}
+function renderEnvPv(){const l=envTargets(),c=l[0];
+ $('#envPv').innerHTML=c?`<div class="hint" style="margin-bottom:4px">宛名プレビュー（選択中の先頭：${esc(c.name)}様）</div><div class="envbox" style="zoom:.55">${envelope(c)}</div>`:''}
+function printSel(){const list=S.customers.filter(c=>SEL.has(c.id)&&!c.skip);if(!list.length){alert('印刷するお客様を選んでください。');return}
+ runPrint(list.map(c=>sheets(S.ym,c)).join(''));
+ setTimeout(()=>{if(confirm('今月の送付先として記録しますか？（効果測定に使います）'))recordLog(true)},800)}
+function printBlank(){const n=Math.max(1,Math.min(200,+$('#blankN').value||1));runPrint(Array(n).fill(sheets(S.ym,null)).join(''))}
+function recordLog(quiet){const list=S.customers.filter(c=>SEL.has(c.id)&&!c.skip);if(!list.length){alert('記録するお客様がいません。');return}
+ S.log[S.ym]=list.map(c=>({id:c.id,seg:seg(c),name:c.name,no:c.no}));save();renderPrint();if(!quiet)alert(list.length+'名を '+S.ym+' の送付先として記録しました。')}
+
+/* ---------- ④ 効果測定 ---------- */
+function renderEff(){
+ const ymEl=$('#effYm');if(!ymEl.value)ymEl.value=S.ym;ymEl.onchange=renderEff;const ym=ymEl.value;
+ const A=S.salon,L=S.log[ym]||[],H=new Set(S.hit[ym]||[]);
+ const sent=L.length,hit=L.filter(x=>H.has(x.id)).length,rate=sent?Math.round(hit/sent*100):0;
+ const cost=sent*A.costPer,sales=hit*A.unit,roi=cost?Math.round((sales-cost)/cost*100):0;
+ const bySeg=['new','regular','dormant'].map(s=>{const t=L.filter(x=>x.seg===s),h=t.filter(x=>H.has(x.id)).length;return [s,t.length,h]});
+ const months=Object.keys(S.log).sort();
+ let html=`<div class="kpis"><div class="kpi"><small>送付数</small><b>${sent}</b> 通</div><div class="kpi"><small>反応（予約・来店）</small><b>${hit}</b> 名</div>
+  <div class="kpi"><small>反応率</small><b>${rate}</b> %</div><div class="kpi"><small>発送費用（目安）</small><b>${cost.toLocaleString()}</b> 円</div>
+  <div class="kpi"><small>売上（目安）</small><b>${sales.toLocaleString()}</b> 円</div><div class="kpi"><small>費用対効果</small><b>${sent?roi:'-'}</b> ${sent?'%':''}</div></div>`;
+ if(!sent)html+=`<p class="hint">この月の送付記録がありません。③印刷で「この月の送付先として記録」を押してください。</p>`;
+ else{
+  html+=`<h3 style="margin:14px 0 6px">区分別の反応率</h3>`+bySeg.map(([s,n,h])=>`<div><span class="badge b-${s}">${SEG[s]}</span> ${h}/${n}名（${n?Math.round(h/n*100):0}%）<div class="bar"><i style="width:${n?h/n*100:0}%"></i></div></div>`).join('');
+  html+=`<h3 style="margin:14px 0 6px">反応のあったお客様にチェック</h3><div class="scrollx"><table class="tbl"><thead><tr><th></th><th>氏名</th><th>区分</th><th>クーポンNo.</th></tr></thead><tbody>`+
+   L.map(x=>`<tr><td style="width:40px;text-align:center"><input type="checkbox" data-id="${x.id}" ${H.has(x.id)?'checked':''}></td><td>${esc(x.name)}</td><td><span class="badge b-${x.seg}">${SEG[x.seg]}</span></td><td>${code(ym,x)}</td></tr>`).join('')+`</tbody></table></div>`}
+ if(sent){const tips=[];
+  const rt=bySeg.filter(x=>x[1]>=2).map(([s,n,h])=>[s,h/n]);
+  if(rt.length>1){rt.sort((a,b)=>a[1]-b[1]);const lo=rt[0],hi=rt[rt.length-1];
+   if(hi[1]-lo[1]>=.15)tips.push(`「${SEG[hi[0]]}」の反応が高く、「${SEG[lo[0]]}」が低めです。${lo[0]==='dormant'?'休眠の方には、特典をより行きやすい内容（無料評価・お試し枠など）にし、手書きひとことを厚めにしてみましょう。':lo[0]==='new'?'初回の方には、来店後1〜2週間のタイミングで届くよう発送日を早め、「次回の目安」を強調しましょう。':'通っている方には、来店周期に合わせたタイミングでの発送と、継続のメリット（経過の記録など）を伝えましょう。'}`)}
+  if(rate<10)tips.push('反応率が10%未満です。特典の具体性（何がもらえるか）と期限、予約QRの見つけやすさを見直しましょう。送付先も「★おすすめ」に絞ると改善しやすくなります。');
+  else if(rate>=25)tips.push('反応率が高い状態です。この月の特典・構成を型として残し、来月も同じ要素（特典の形、ひとことの書き方）を踏襲しましょう。');
+  if(sent&&roi<0)tips.push('今月は費用が売上を上回っています。送付先を絞る（おすすめのみ）か、1通あたりの費用を見直しましょう。ただし再来店の累計効果は含まれていません。');
+  tips.push('反応のあった方には、次回来店時に次回予約を取る（予約メモ欄を一緒に記入）と、継続につながります。');
+  html+=`<div class="aires" style="margin-top:14px"><b style="color:var(--moss-d)">次の一手</b><ul style="margin:6px 0 0;padding-left:20px">${tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`}
+ if(months.length>1){html+=`<h3 style="margin:18px 0 6px">月ごとの反応率の推移</h3>`+months.map(m=>{const t=S.log[m],h=new Set(S.hit[m]||[]),k=t.filter(x=>h.has(x.id)).length,r=Math.round(k/t.length*100);
+  return `<div>${m}　${k}/${t.length}名（${r}%）<div class="bar"><i style="width:${r}%"></i></div></div>`}).join('')}
+ $('#effBody').innerHTML=html;
+ $('#effBody').querySelectorAll('input[data-id]').forEach(el=>el.onchange=()=>{const s=new Set(S.hit[ym]||[]);el.checked?s.add(el.dataset.id):s.delete(el.dataset.id);S.hit[ym]=[...s];save();renderEff()})}
+
+/* ---------- ⑤ サロン情報 ---------- */
+const SF=[['サロン名','name'],['キャッチコピー（フッターに表示）','tag'],['施術者名（手書きひとこと欄の署名）','owner'],['電話番号','phone'],['住所','addr'],['営業・予約受付時間','hours'],['予約ページURL','url'],['創刊月（Vol.1にする月）','start','month']];
+function renderSet(){
+ $('#setForm').innerHTML=SF.map(([l,k,t])=>`<label class="f">${l}</label><input class="in" type="${t||'text'}" data-k="${k}" value="${esc(S.salon[k])}">`).join('');
+ $('#costForm').innerHTML=`<label class="f">1通あたりの発送費用（円）：切手＋用紙＋封筒＋インク</label><input class="in" type="number" data-k="costPer" value="${S.salon.costPer}">
+  <label class="f">1回の来店あたりの平均売上（円）</label><input class="in" type="number" data-k="unit" value="${S.salon.unit}">
+  <p class="hint" style="margin-top:8px">効果測定の費用対効果の計算に使います。</p>`;
+ document.querySelectorAll('#setForm [data-k],#costForm [data-k]').forEach(el=>el.oninput=()=>{S.salon[el.dataset.k]=el.type==='number'?(+el.value||0):el.value;save()});
+ const q=S.salon.qr;$('#qrImg').style.display=q?'inline-block':'none';$('#qrDel').style.display=q?'inline-block':'none';if(q)$('#qrImg').src=q}
+function upQr(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{
+ const m=360,k=Math.min(1,m/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=im.width*k;cv.height=im.height*k;
+ cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);S.salon.qr=cv.toDataURL('image/png');save();renderSet()};im.src=r.result};r.readAsDataURL(f)}
+function delQr(){S.salon.qr='';save();renderSet()}
+
+/* ---------- バックアップ ---------- */
+function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function backup(){dl('整えサロンDM_バックアップ_'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(S),'application/json')}
+function restore(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.salon)throw 0;
+ if(!confirm('現在のデータを、このバックアップで置き換えます。よろしいですか？'))return;localStorage.setItem(LS,JSON.stringify(d));load();go('set');alert('復元しました。')}catch(e){alert('バックアップファイルを読み込めませんでした。')}};r.readAsText(f);inp.value=''}
+
+/* =========================================================
+   AI下書き
+   ========================================================= */
+const LS_AI='totonoe-dm-ai-v1';   // APIキーはバックアップに含めないよう別保存
+let AI={key:'',model:'claude-sonnet-5-5'};
+try{Object.assign(AI,JSON.parse(localStorage.getItem(LS_AI))||{})}catch(e){}
+const AIUNDO={};
+let aiMode='auto',aiInstr='',aiUseParts=true,aiResult=null,aiBusy=false,aiMsg='';
+function saveAiSet(){AI.key=$('#aiKey').value.trim();AI.model=$('#aiModel').value.trim()||'claude-sonnet-5-5';
+ try{localStorage.setItem(LS_AI,JSON.stringify(AI))}catch(e){}alert('AI設定を保存しました。')}
+function clearAiKey(){AI.key='';try{localStorage.setItem(LS_AI,JSON.stringify(AI))}catch(e){}$('#aiKey').value='';alert('キーを消去しました。')}
+
+function openAi(){aiResult=null;aiMsg='';$('#aiYm').textContent=S.ym;$('#aiModal').style.display='flex';renderAi()}
+function closeAi(){$('#aiModal').style.display='none'}
+function partsStat(){const m={};S.customers.forEach(c=>{if(c.skip)return;(c.part||'').split(/[、,・\/\s]+/).filter(Boolean).forEach(p=>m[p]=(m[p]||0)+1)});
+ return Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`${p}:${n}名`).join('、')}
+function renderAi(){
+ const noKey=!AI.key;
+ $('#aiBody').innerHTML=`
+ <div class="opt">
+  <label class="${aiMode==='auto'?'on':''}"><input type="radio" name="am" value="auto" ${aiMode==='auto'?'checked':''} onchange="setAiMode('auto')"> 自動モード<small>季節・過去のテーマ・お客様の傾向からAIがテーマを選んで作成</small></label>
+  <label class="${aiMode==='instr'?'on':''}"><input type="radio" name="am" value="instr" ${aiMode==='instr'?'checked':''} onchange="setAiMode('instr')"> 指示書モード<small>あなたの指示書（テーマ・伝えたいこと等）に沿って作成</small></label>
+ </div>
+ ${aiMode==='instr'?`<label class="f">指示書</label>
+  <textarea class="in" id="aiInstr" rows="7" oninput="aiInstr=this.value" placeholder="例）&#10;テーマ：デスクワークの首こり&#10;伝えたいこと：1時間に1回立つ習慣。うちでは姿勢評価をしていること&#10;特典：首肩ケア5分追加&#10;トーン：やさしく、少しユーモアも&#10;入れたくない表現：「治る」">${esc(aiInstr)}</textarea>
+  <div style="margin-top:6px"><span class="hint">指示書ファイル（.txt / .md）から読み込む：</span> <input type="file" accept=".txt,.md" onchange="loadInstr(this)"></div>
+  <p class="hint">指示のない項目はAIが補います。書き方は自由です。</p>`:''}
+ <div style="margin:10px 0"><label><input type="checkbox" ${aiUseParts?'checked':''} onchange="aiUseParts=this.checked"> お客様の「気になる部位」の集計（個人名なし）を参考にする</label>
+  <div class="hint" style="margin-left:22px">送信される集計：${esc(partsStat()||'（登録なし）')}</div></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+  <button class="btn" ${aiBusy||noKey?'disabled style="opacity:.5"':''} onclick="aiRun()">${aiBusy?'作成中…':'APIで下書きを作成'}</button>
+  <button class="btn sub" onclick="aiCopy()">プロンプトをコピー（APIキー不要）</button>
+ </div>
+ ${noKey?'<p class="hint" style="margin-top:6px">APIキー未設定のため、右のコピー方式をご利用ください。キーは「⑤ サロン情報」の「AI設定」で登録できます。</p>':''}
+ <div id="aiMsg" class="hint" style="margin-top:8px;color:var(--red)">${esc(aiMsg)}</div>
+ <details style="margin-top:10px"><summary class="hint" style="cursor:pointer">コピー方式：AIの返答を貼り付けて反映</summary>
+  <p class="hint">①「プロンプトをコピー」→ ②普段使っているClaude等に貼り付けて送信 → ③返ってきた文章（JSON）をここに貼り付け</p>
+  <textarea class="in" id="aiPaste" rows="5" placeholder="AIの返答をここに貼り付け"></textarea>
+  <button class="btn sub sm" style="margin-top:6px" onclick="aiParsePaste()">貼り付けた内容を読み込む</button></details>
+ <div id="aiRes">${aiResult?resHtml(aiResult):''}</div>`}
+function setAiMode(m){aiMode=m;renderAi()}
+function loadInstr(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{aiInstr=String(r.result).slice(0,8000);renderAi()};r.readAsText(f)}
+
+const AI_KEYS={greet:'導入のあいさつ（60〜90字。季節の話題から始め、読み手を気づかう）',title:'コラム見出し（24字以内）',lead:'サブタイトル（30字以内）',c1:'コラム本文①（90〜110字）',c2:'コラム本文②（90〜110字。作業療法士としての視点・安心感で締める）',
+ steps:'セルフケア3つ。[{"t":"タイトル14字以内","d":"やり方55字以内。回数・秒数など具体的に"}]×3',checks:'からだチェック4項目（各24字以内の文字列）',checkNote:'チェック結果の案内（70字以内。来店を強要しない）',
+ tipT:'豆知識の見出し（24字以内）',tipB:'豆知識の本文（90字以内）',offerT:'特典タイトル（16字以内）',offerB:'特典内容（70字以内。値引きでなく付加価値）',dormT:'休眠のお客様向け特典タイトル（16字以内）',dormB:'休眠のお客様向け特典内容（70字以内。久しぶりでも来やすい温かい内容）',next:'来月の予告（40字以内）',bdayT:'お誕生月特典タイトル（16字以内）',bdayB:'お誕生月特典の内容（70字以内。祝う気持ちが伝わる）',refT:'紹介特典タイトル（16字以内）',refB:'紹介特典の内容（70字以内。紹介する側・される側の双方にメリット）'};
+function aiPrompt(){
+ const A=S.salon,[y,mo]=S.ym.split('-').map(Number);
+ const past=[],seen=new Set([S.ym]),addP=(k,tag)=>{const p=shiftYm(S.ym,-k);if(seen.has(p))return;seen.add(p);past.push(`${p}${tag}：${issue(p).title}`)};
+ for(let k=1;k<=12;k++)if(shiftYm(S.ym,-k)>=S.salon.start)addP(k,'');addP(12,'（昨年の同じ月）');addP(24,'（2年前の同じ月）');
+ past.push(`（定番テーマ・今月分）${M[mo].title} ／ ${M2[mo].title}`);
+ const system=`あなたは、作業療法士が運営するプライベートサロン「${A.name}」の月刊DM（A4・2枚、郵送）の編集者です。
+【サロンの特徴】${A.tag}。リハビリ視点の評価と、根本原因からの改善がコンセプト。主な対象は肩こり・腰痛などをお持ちの方。施術者は1名。
+【DMの目的】お客様の健康向上と、サロンを思い出してもらうこと。結果としてリピート率を上げる。
+【読み手】一般の顧客。高齢の方も含む。難しい用語を避け、やさしく具体的な言葉で書く。
+【守ること】
+・「治る」「必ず改善」「〜に効く」など効果の断定、診断、治療を示唆する表現は使わない。「〜しやすくなります」「〜の目安です」などを使う。
+・セルフケアは安全で簡単なもの。道具不要、1分程度、無理のない範囲で。
+・売り込みすぎない。値引きではなく付加価値（ケア追加・無料評価など）で来店理由をつくる。
+・字数上限を守る（A4・2枚に収めるため）。
+【リピートを生む設計】
+・読み終えた人の「次の行動」を1つに絞る（予約する／セルフケアを試す／次回の目安時期を覚える）。
+・来店の理由を2つ用意する：①健康上の理由（季節の変化・経過の見直し・ケアの継続）、②特典の期限。
+・来店のハードルを下げる：「ちょっと相談だけ」「無理に勧めない」安心感を、押しつけがましくなく伝える。
+・読者を主役にする（「当サロンは」より「あなたの体は」）。専門性は作業療法士としての視点でさりげなく示す。
+・コラムとセルフケアとチェックと特典が同じテーマでつながっているようにする。
+【出力形式】説明文やコードブロックは付けず、次のキーを持つJSONオブジェクトだけを出力する。
+${Object.entries(AI_KEYS).map(([k,v])=>`"${k}": ${v}`).join('\n')}`;
+ let user=`${y}年${mo}月号の文面を作成してください。\n`;
+ if(past.length)user+=`【これまでに使ったテーマ（同じテーマ・似た切り口は避け、新しい角度で書く）】\n${past.join('\n')}\n`;
+ if(aiUseParts&&partsStat())user+=`【お客様の気になる部位の集計（人数）】${partsStat()}\n`;
+ const goal=issue(S.ym).goal;if(goal&&goal!=='auto')user+=`【今月の狙い】${GOALS[goal]}（この狙いに最も効く構成・言葉選びにする）\n`;
+ const rs=Object.keys(S.log).filter(k=>k!==S.ym).sort().slice(-3).map(m=>{const t=S.log[m],h=new Set(S.hit[m]||[]);
+  const seg=s=>{const x=t.filter(v=>v.seg===s);return x.length?`${SEG[s]}${Math.round(x.filter(v=>h.has(v.id)).length/x.length*100)}%`:null};
+  return `${m}：`+['new','regular','dormant'].map(seg).filter(Boolean).join('、')}).filter(Boolean);
+ if(rs.length)user+=`【過去のDMの反応率（参考）】\n${rs.join('\n')}\n`;
+ if(aiMode==='auto')user+=`【モード：自動】${mo}月の季節・気候・生活の変化と、お客様の傾向から、いま読んで役立つテーマを1つ選んで作成してください。`;
+ else user+=`【モード：指示書】以下の指示書に沿って作成してください。指示書にない項目は、上記の方針で補ってください。\n--- 指示書 ---\n${aiInstr.trim()||'（未入力：自動で作成してください）'}\n--- ここまで ---`;
+ return {system,user}}
+async function aiRun(){
+ if(aiMode==='instr'&&!aiInstr.trim()){aiMsg='指示書を入力してください。';renderAi();return}
+ const {system,user}=aiPrompt();aiBusy=true;aiMsg='';aiResult=null;renderAi();
+ try{
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':AI.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+   body:JSON.stringify({model:AI.model,max_tokens:3000,system,messages:[{role:'user',content:user}]})});
+  const j=await r.json();
+  if(!r.ok)throw new Error(j.error?.message||('HTTP '+r.status));
+  const t=(j.content||[]).map(b=>b.text||'').join('');
+  aiResult=parseAi(t);
+ }catch(e){aiMsg='作成できませんでした：'+e.message+'（コピー方式もお試しください）'}
+ aiBusy=false;renderAi()}
+function aiCopy(){
+ if(aiMode==='instr'&&!aiInstr.trim()){aiMsg='指示書を入力してください。';renderAi();return}
+ const {system,user}=aiPrompt(),t=system+'\n\n----------\n\n'+user;
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{aiMsg='';alert('プロンプトをコピーしました。Claude等に貼り付けて送信し、返答を下の「貼り付けて反映」に入れてください。')})
+  .catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('プロンプトをコピーしました。')})}
+function aiParsePaste(){try{aiResult=parseAi($('#aiPaste').value);aiMsg=''}catch(e){aiResult=null;aiMsg='読み込めませんでした：'+e.message}
+ const p=$('#aiPaste').value;renderAi();$('#aiPaste').value=p;$('#aiPaste').closest('details').open=true}
+function parseAi(t){const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<a)throw new Error('JSONが見つかりません');
+ let o;try{o=JSON.parse(t.slice(a,b+1))}catch(e){throw new Error('JSONの形式が不正です')}
+ const need=['title','lead','c1','c2','steps','checks'];for(const k of need)if(!o[k])throw new Error('項目「'+k+'」がありません');
+ if(!Array.isArray(o.steps)||o.steps.length<3)throw new Error('セルフケアが3つ揃っていません');
+ if(!Array.isArray(o.checks)||o.checks.length<4)throw new Error('からだチェックが4つ揃っていません');
+ return o}
+function resHtml(o){const s=v=>esc(String(v??''));
+ return `<div class="aires"><b style="color:var(--moss-d)">下書きができました（まだ反映されていません）</b><dl>
+ <dt>見出し</dt><dd>${s(o.title)}</dd><dt>サブタイトル</dt><dd>${s(o.lead)}</dd>
+ ${o.greet?`<dt>あいさつ</dt><dd>${s(o.greet)}</dd>`:''}
+ <dt>コラム</dt><dd>${s(o.c1)}<br>${s(o.c2)}</dd>
+ <dt>セルフケア</dt><dd>${o.steps.slice(0,3).map((x,i)=>`${i+1}. <b>${s(x.t??x[0])}</b>：${s(x.d??x[1])}`).join('<br>')}</dd>
+ <dt>からだチェック</dt><dd>${o.checks.slice(0,4).map(s).join('<br>')}</dd>
+ ${o.tipT?`<dt>豆知識</dt><dd><b>${s(o.tipT)}</b> ${s(o.tipB)}</dd>`:''}
+ ${o.offerT?`<dt>特典</dt><dd><b>${s(o.offerT)}</b> ${s(o.offerB)}</dd>`:''}
+ ${o.dormT?`<dt>休眠向け特典</dt><dd><b>${s(o.dormT)}</b> ${s(o.dormB)}</dd>`:''}
+ ${o.next?`<dt>来月の予告</dt><dd>${s(o.next)}</dd>`:''}</dl>
+ <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="applyAi()">この内容を反映する</button><button class="btn sub" onclick="aiResult=null;renderAi()">破棄</button></div>
+ <p class="hint" style="margin-top:6px">反映後に文字量がはみ出す場合はプレビューに警告が出ます。内容は自由に直せます。必ず目を通してから印刷してください。</p></div>`}
+function applyAi(){const o=aiResult;if(!o)return;
+ AIUNDO[S.ym]=JSON.parse(JSON.stringify(issue(S.ym)));
+ const I=ensureIssue(S.ym),t=v=>String(v??'').trim();
+ ['greet','title','lead','c1','c2','checkNote','tipT','tipB','offerT','offerB','dormT','dormB','next','bdayT','bdayB','refT','refB'].forEach(k=>{if(o[k])I[k]=t(o[k])});
+ I.steps=o.steps.slice(0,3).map(x=>[t(x.t??x[0]),t(x.d??x[1])]);
+ I.checks=o.checks.slice(0,4).map(t);
+ save();aiResult=null;closeAi();renderIssue()}
+function undoAi(){const b=AIUNDO[S.ym];if(!b)return;if(!confirm('AIを反映する前の文面に戻します。よろしいですか？'))return;S.issues[S.ym]=b;delete AIUNDO[S.ym];save();renderIssue()}
+const _renderSet=renderSet;renderSet=function(){_renderSet();$('#aiKey').value=AI.key;$('#aiModel').value=AI.model};
+
+go('issue');
+</script>
+</body>
+</html>
